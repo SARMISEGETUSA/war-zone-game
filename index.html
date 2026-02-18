@@ -11,133 +11,129 @@
 :root{--primary:#00ff88;--secondary:#ff0055;--bg:#0a0e27;--panel:rgba(21,27,58,0.95);}
 html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'Inconsolata',monospace;overflow:hidden;}
 
-.login-container{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,14,39,0.97);z-index:1000;}
-.login-box{background:linear-gradient(135deg,#151b3a,#0f1428);border:2px solid var(--primary);padding:2rem;border-radius:20px;max-width:500px;width:95%;max-height:90vh;overflow-y:auto;}
+.screen{display:none;width:100%;height:100%;position:absolute;top:0;left:0;}
+.screen.active{display:flex;}
+
+/* LOGIN SCREEN */
+#loginScreen{align-items:center;justify-content:center;background:rgba(10,14,39,0.97);}
+.login-container{background:linear-gradient(135deg,#151b3a,#0f1428);border:2px solid var(--primary);padding:2rem;border-radius:20px;max-width:400px;width:90%;}
 .login-title{font-family:'Righteous',sans-serif;font-size:2rem;color:var(--primary);margin-bottom:1.5rem;text-align:center;}
 .login-input{width:100%;background:rgba(15,20,40,0.8);border:2px solid rgba(0,255,136,0.3);color:#fff;padding:.8rem;margin-bottom:.8rem;font-family:monospace;border-radius:8px;font-size:1rem;}
-.login-btn{width:100%;background:linear-gradient(135deg,var(--primary),#00dd88);color:#000;border:none;padding:.8rem;font-weight:bold;cursor:pointer;border-radius:8px;margin-bottom:.5rem;min-height:44px;font-size:1rem;transition:all .2s;}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--primary),#00dd88);color:#000;border:none;padding:.8rem;font-weight:bold;cursor:pointer;border-radius:8px;margin-bottom:.5rem;min-height:44px;font-size:1rem;}
 .login-btn:hover{transform:scale(1.02);}
 .login-btn:disabled{opacity:0.5;cursor:not-allowed;}
 
-.players-section{margin:1.5rem 0;padding:1rem;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:10px;}
-.players-section h3{color:var(--primary);font-size:.9rem;margin-bottom:.8rem;border-bottom:1px solid rgba(0,255,136,0.3);padding-bottom:.5rem;}
-.players-list{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;}
-.player-item{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);padding:.6rem;border-radius:6px;font-size:.75rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .2s;}
-.player-item:hover{background:rgba(0,255,136,0.2);border-color:var(--primary);}
-.player-item.selected{background:rgba(255,0,85,0.2);border-color:var(--secondary);}
-.player-name{color:#fff;font-weight:bold;}
-.player-stats{color:#aaa;font-size:.7rem;}
-.player-team{padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:bold;}
+/* GARAGE/LOBBY SCREEN */
+#garageScreen{flex-direction:column;background:var(--bg);z-index:100;}
+#garageContent{display:flex;height:100%;overflow:hidden;}
+#garageLeft{flex:1;padding:20px;border-right:2px solid var(--primary);overflow-y:auto;background:rgba(0,0,0,0.3);}
+#garageRight{flex:2;padding:20px;overflow-y:auto;}
+.garage-title{font-family:'Righteous',sans-serif;font-size:1.5rem;color:var(--primary);margin-bottom:15px;border-bottom:2px solid var(--primary);padding-bottom:10px;}
+.player-info{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);padding:12px;border-radius:8px;margin-bottom:15px;}
+.player-info p{font-size:.85rem;margin:5px 0;color:#ccc;}
+.player-info p span{color:var(--primary);font-weight:bold;}
+.units-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
+.unit-card{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);padding:10px;border-radius:8px;cursor:pointer;transition:all .2s;text-align:center;}
+.unit-card:hover{background:rgba(0,255,136,0.2);border-color:var(--primary);}
+.unit-card .icon{font-size:2rem;margin-bottom:5px;}
+.unit-card .name{font-size:.7rem;font-weight:bold;color:var(--primary);}
+.unit-card .cost{font-size:.6rem;color:#888;}
+.unit-card .count{background:var(--secondary);color:#fff;padding:2px 6px;border-radius:4px;font-size:.6rem;margin-top:5px;display:inline-block;}
+.opponents-list{display:flex;flex-direction:column;gap:10px;}
+.opponent{background:rgba(0,255,136,0.1);border:2px solid rgba(0,255,136,0.3);padding:12px;border-radius:8px;cursor:pointer;transition:all .2s;}
+.opponent:hover{background:rgba(0,255,136,0.2);border-color:var(--primary);}
+.opponent.selected{background:rgba(255,0,85,0.2);border-color:var(--secondary);}
+.opponent-name{font-weight:bold;color:#fff;font-size:.85rem;}
+.opponent-stats{font-size:.7rem;color:#aaa;margin-top:5px;}
+.garage-buttons{display:flex;gap:10px;margin-top:20px;}
+.garage-btn{flex:1;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:.85rem;transition:all .2s;}
+.btn-start{background:linear-gradient(135deg,var(--primary),#00dd88);color:#000;}
+.btn-start:hover{transform:scale(1.05);}
+.btn-back{background:rgba(100,100,100,0.3);color:#ccc;border:1px solid rgba(100,100,100,0.5);}
+.btn-back:hover{background:rgba(100,100,100,0.5);}
 
-#gameScreen{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+/* GAME SCREEN */
+#gameScreen{flex-direction:column;background:#000;z-index:50;}
 #topBar{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--panel);border-bottom:2px solid var(--primary);flex-shrink:0;flex-wrap:wrap;}
 .top-stat{font-size:.7rem;padding:3px 8px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:6px;white-space:nowrap;}
 .top-stat span{color:var(--primary);font-weight:bold;}
-.top-btn{background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:var(--primary);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:.7rem;font-weight:bold;min-height:30px;white-space:nowrap;}
+.top-btn{background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:var(--primary);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:.7rem;font-weight:bold;white-space:nowrap;}
 .top-btn:hover{background:rgba(0,255,136,0.3);}
 #topBar .spacer{flex:1;}
-
 #middle{display:flex;flex:1;overflow:hidden;gap:6px;padding:6px;}
-#canvasWrap{flex:1;position:relative;border:2px solid var(--primary);border-radius:10px;overflow:hidden;background:#000;cursor:crosshair;touch-action:manipulation;min-width:0;}
+#canvasWrap{flex:1;position:relative;border:2px solid var(--primary);border-radius:10px;overflow:hidden;background:#000;cursor:crosshair;}
 #gameCanvas{width:100%;height:100%;display:block;}
 #minimap{position:absolute;bottom:8px;right:8px;width:130px;height:100px;border:1px solid rgba(0,255,136,0.5);border-radius:4px;background:rgba(5,8,20,0.85);cursor:pointer;}
 #zoomCtrl{position:absolute;bottom:8px;left:8px;display:flex;flex-direction:column;gap:4px;}
-.zoom-btn{width:32px;height:32px;background:rgba(0,0,0,0.7);border:1px solid rgba(0,255,136,0.5);color:var(--primary);border-radius:6px;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;}
-.zoom-btn:hover{background:rgba(0,255,136,0.2);}
-#zoomLabel{color:var(--primary);font-size:.6rem;text-align:center;background:rgba(0,0,0,0.6);border-radius:4px;padding:1px 4px;}
-
+.zoom-btn{width:32px;height:32px;background:rgba(0,0,0,0.7);border:1px solid rgba(0,255,136,0.5);color:var(--primary);border-radius:6px;cursor:pointer;font-size:1.2rem;}
+#zoomLabel{color:var(--primary);font-size:.6rem;text-align:center;background:rgba(0,0,0,0.6);padding:1px 4px;}
 #spawnBar{width:72px;flex-shrink:0;display:flex;flex-direction:column;gap:5px;overflow-y:auto;background:var(--panel);border:2px solid var(--primary);border-radius:10px;padding:5px;}
-#spawnBar::-webkit-scrollbar{width:3px;}
-#spawnBar::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.3);}
 .spawn-btn{width:60px;height:60px;background:rgba(0,255,136,0.12);border:2px solid rgba(0,255,136,0.35);border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.5rem;color:#ccc;font-family:monospace;transition:all .15s;position:relative;flex-shrink:0;}
-.spawn-btn:hover{background:rgba(0,255,136,0.25);border-color:var(--primary);color:#fff;}
-.spawn-btn.disabled-btn{opacity:.35;cursor:not-allowed;border-color:rgba(255,0,85,0.4);}
-.spawn-btn .s-icon{font-size:1.4rem;line-height:1;}
-.spawn-btn .s-name{font-size:.45rem;text-transform:uppercase;font-weight:bold;color:var(--primary);}
-.spawn-btn .s-cost{font-size:.4rem;color:#aaa;}
-.spawn-btn .badge{position:absolute;top:2px;right:2px;background:rgba(0,255,136,0.8);color:#000;font-size:.45rem;border-radius:3px;padding:0 3px;font-weight:bold;}
-
-#unitInfo{position:fixed;z-index:500;background:var(--panel);border:2px solid var(--primary);border-radius:10px;padding:10px 14px;min-width:180px;max-width:220px;display:none;pointer-events:none;box-shadow:0 0 20px rgba(0,255,136,0.3);}
-#unitInfo h3{font-family:'Righteous',sans-serif;color:var(--primary);font-size:.9rem;margin-bottom:6px;}
-#unitInfo .ui-row{display:flex;justify-content:space-between;font-size:.65rem;margin:2px 0;}
-#unitInfo .ui-row span:last-child{color:var(--primary);}
-
-.overlay-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800;display:none;align-items:flex-end;justify-content:center;}
-.overlay-backdrop.active{display:flex;}
-#chatOverlay{width:100%;max-width:560px;background:var(--panel);border:2px solid var(--primary);border-radius:14px 14px 0 0;padding:10px;display:flex;flex-direction:column;gap:7px;max-height:70vh;}
-#chatMessages{flex:1;overflow-y:auto;font-size:.7rem;background:rgba(0,0,0,0.3);padding:.5rem;border-radius:6px;max-height:45vh;}
-.chat-message{margin:.2rem 0;padding:.2rem .4rem;border-left:2px solid;border-radius:2px;}
-.chat-message.blue{border-left-color:#0088ff;}.chat-message.red{border-left-color:#ff2200;}.chat-message.green{border-left-color:#00ff00;}
-.chat-message.yellow{border-left-color:#ffff00;}.chat-message.purple{border-left-color:#ff00ff;}.chat-message.orange{border-left-color:#ff8800;}
-.chat-message.system{border-left-color:var(--primary);color:var(--primary);}
-.chat-input-row{display:flex;gap:6px;}
-.chat-input{flex:1;background:rgba(15,20,40,0.8);border:1px solid rgba(0,255,136,0.35);color:#fff;padding:.5rem;font-family:monospace;font-size:.75rem;border-radius:6px;}
-.chat-send-btn{background:linear-gradient(135deg,var(--primary),#00cc66);color:#000;border:none;padding:.5rem 1rem;cursor:pointer;border-radius:6px;font-weight:bold;font-size:.75rem;}
-
-#lbPanel{font-size:.62rem;display:flex;gap:8px;flex-wrap:wrap;}
-.lb-item{padding:2px 7px;border-radius:4px;border:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.05);}
+.spawn-btn:hover{background:rgba(0,255,136,0.25);border-color:var(--primary);}
+.spawn-btn .icon{font-size:1.4rem;}
+.spawn-btn .name{font-size:.45rem;color:var(--primary);font-weight:bold;}
+.spawn-btn .cost{font-size:.4rem;color:#aaa;}
 
 .game-over{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);z-index:999;}
-.game-over-card{background:#151b3a;border:3px solid var(--primary);padding:2rem;border-radius:16px;text-align:center;max-width:380px;width:90%;}
+.game-over-card{background:#151b3a;border:3px solid var(--primary);padding:2rem;border-radius:16px;text-align:center;max-width:380px;}
 .game-over-title{font-family:'Righteous',sans-serif;font-size:1.8rem;margin-bottom:1rem;color:var(--primary);}
 </style>
 </head>
 <body>
 
-<div id="login" class="login-container">
-  <div class="login-box">
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="screen active">
+  <div class="login-container">
     <div class="login-title">⚔️ WAR ZONE V3.1</div>
     <input type="text" id="serverUrl" class="login-input" placeholder="Server URL" value="">
     <button class="login-btn" onclick="connectServer()">🔗 CONNECT</button>
-    
     <input type="text" id="playerName" class="login-input" placeholder="Numele tău" value="Alpha" disabled>
-    
-    <div id="playersContainer" class="players-section" style="display:none;">
-      <h3>⚔️ SELECTEAZĂ ADVERSARI</h3>
-      <div id="playersList" class="players-list"></div>
-      <p style="font-size:.65rem;color:#888;margin-top:.5rem;text-align:center;">Click pentru a ataca!</p>
-    </div>
-    
-    <button class="login-btn" id="joinBtn" onclick="declareWar()" style="display:none;" disabled>⚔️ DECLARĂ RĂZBOI!</button>
+    <button class="login-btn" id="loginBtn" onclick="goToGarage()" style="display:none;" disabled>INTRĂ ÎN GARAJ</button>
   </div>
 </div>
 
-<div id="unitInfo">
-  <h3 id="ui-name">SOLDIER</h3>
-  <div class="ui-row"><span>❤️ HP</span><span id="ui-hp">30</span></div>
-  <div class="ui-row"><span>⚔️ DMG</span><span id="ui-dmg">10</span></div>
-  <div class="ui-row"><span>🎯 RNG</span><span id="ui-range">80</span></div>
-  <div class="ui-row"><span>💨 SPD</span><span id="ui-spd">2</span></div>
-  <div class="ui-row"><span>💰 Cost</span><span id="ui-cost">30G / 20E</span></div>
-</div>
+<!-- GARAGE/LOBBY SCREEN -->
+<div id="garageScreen" class="screen">
+  <div style="display:flex;align-items:center;padding:10px;background:var(--panel);border-bottom:2px solid var(--primary);">
+    <div style="flex:1;font-family:'Righteous',sans-serif;color:var(--primary);font-size:1.2rem;">🏗️ GARAJUL TĂU</div>
+    <button class="top-btn" onclick="backToLogin()" style="background:rgba(255,0,85,0.2);color:#ff0055;">← BACK</button>
+  </div>
+  <div id="garageContent">
+    <div id="garageLeft">
+      <div class="garage-title">👤 PROFIL</div>
+      <div class="player-info">
+        <p>Jucător: <span id="garagePlayerName">-</span></p>
+        <p>Team: <span id="garageTeam">-</span></p>
+        <p>💰 <span id="garageGold">0</span>G</p>
+        <p>⚡ <span id="garageEnergy">0</span>E</p>
+      </div>
 
-<div class="overlay-backdrop" id="chatBackdrop" onclick="closeChatIfOutside(event)">
-  <div id="chatOverlay">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-family:'Righteous',sans-serif;color:var(--primary);font-size:.85rem;">💬 CHAT</div>
-      <button onclick="toggleChat()" style="background:none;border:none;color:#888;cursor:pointer;font-size:1rem;">✕</button>
+      <div class="garage-title">🪖 UNITĂȚILOR</div>
+      <div class="units-grid" id="garageUnits"></div>
+
+      <div class="garage-buttons">
+        <button class="garage-btn btn-start" onclick="startWar()">⚔️ START WAR</button>
+      </div>
     </div>
-    <div id="chatMessages"></div>
-    <div class="chat-input-row">
-      <input type="text" id="chatInput" class="chat-input" placeholder="Mesaj..." onkeypress="handleChatKeypress(event)">
-      <button class="chat-send-btn" onclick="sendChatMessage()">SEND</button>
+
+    <div id="garageRight">
+      <div class="garage-title">⚔️ ALEGE ADVERSAR</div>
+      <div class="opponents-list" id="opponentsList"></div>
     </div>
   </div>
 </div>
 
-<div id="gameScreen" style="display:none;">
+<!-- GAME SCREEN -->
+<div id="gameScreen" class="screen">
   <div id="topBar">
     <div class="top-stat">👤 <span id="playerNameDisplay">-</span></div>
     <div class="top-stat">🪖 <span id="unitsCount">0</span></div>
     <div class="top-stat">💀 <span id="killsCount">0</span></div>
-    <div class="top-stat">💰 <span id="goldDisplay">500</span>G</div>
-    <div class="top-stat">⚡ <span id="energyDisplay">100</span>E</div>
+    <div class="top-stat">💰 <span id="goldDisplay">0</span>G</div>
+    <div class="top-stat">⚡ <span id="energyDisplay">0</span>E</div>
     <div class="spacer"></div>
-    <div id="lbPanel"></div>
-    <div class="spacer"></div>
-    <button class="top-btn" onclick="toggleChat()" id="chatBtn">💬 CHAT</button>
+    <button class="top-btn" onclick="backToGarage()">← GARAJ</button>
   </div>
-
   <div id="middle">
     <div id="canvasWrap">
       <canvas id="gameCanvas"></canvas>
@@ -148,46 +144,53 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
       </div>
       <canvas id="minimap"></canvas>
     </div>
-
     <div id="spawnBar"></div>
   </div>
 </div>
 
 <script>
 const UNIT_DEFS = {
-  soldier:    { icon:'👤', name:'SOLDIER',    hp:30,  dmg:10, range:80,  spd:2,   gold:30,  energy:20  },
-  tank:       { icon:'🛡️', name:'TANK',       hp:120, dmg:22, range:50,  spd:0.8, gold:100, energy:50  },
-  fighter:    { icon:'✈️', name:'FIGHTER',    hp:50,  dmg:35, range:100, spd:3.2, gold:150, energy:80  },
-  cannon:     { icon:'🔫', name:'CANNON',     hp:40,  dmg:50, range:160, spd:0.4, gold:200, energy:100 },
-  helicopter: { icon:'🚁', name:'HELI',       hp:60,  dmg:40, range:120, spd:3.8, gold:250, energy:120 },
-  bomber:     { icon:'💣', name:'BOMBER',     hp:70,  dmg:65, range:180, spd:2.2, gold:300, energy:150 },
-  collector:  { icon:'📦', name:'COLLECTOR',  hp:25,  dmg:0,  range:0,   spd:2,   gold:20,  energy:10  },
-  constructor:{ icon:'🏗️', name:'CONSTRUCTOR',hp:35, dmg:5,  range:40,  spd:1.5, gold:80,  energy:60  },
-  turret:     { icon:'🔫', name:'TURRET',     hp:80,  dmg:45, range:150, spd:0,   gold:150, energy:100 },
-  barracks:   { icon:'🏛️', name:'BARRACKS',   hp:100, dmg:0,  range:0,   spd:0,   gold:200, energy:150 }
+  soldier:    { icon:'👤', name:'SOLDIER',    hp:30,  dmg:10, gold:30,  energy:20  },
+  tank:       { icon:'🛡️', name:'TANK',       hp:120, dmg:22, gold:100, energy:50  },
+  fighter:    { icon:'✈️', name:'FIGHTER',    hp:50,  dmg:35, gold:150, energy:80  },
+  cannon:     { icon:'🔫', name:'CANNON',     hp:40,  dmg:50, gold:200, energy:100 },
+  helicopter: { icon:'🚁', name:'HELI',       hp:60,  dmg:40, gold:250, energy:120 },
+  bomber:     { icon:'💣', name:'BOMBER',     hp:70,  dmg:65, gold:300, energy:150 },
+  collector:  { icon:'📦', name:'COLLECTOR',  hp:25,  dmg:0,  gold:20,  energy:10  },
+  constructor:{ icon:'🏗️', name:'CONSTRUCTOR',hp:35, dmg:5,  gold:80,  energy:60  },
+  turret:     { icon:'🔫', name:'TURRET',     hp:80,  dmg:45, gold:150, energy:100 },
+  barracks:   { icon:'🏛️', name:'BARRACKS',   hp:100, dmg:0,  gold:200, energy:150 }
 };
 const UNIT_KEYS = Object.keys(UNIT_DEFS);
 
 const state = {
-  connected:false, gameStarted:false,
-  myPlayerId:null, myPlayer:null,
-  players:[], units:[], bases:[],
-  resourceNodes:[], projectiles:[], obstacles:[],
-  gameStatus:'waiting',
-  selectedUnits:new Set(),
-  mapWidth: 800, mapHeight: 700
+  connected: false,
+  myPlayerId: null,
+  myPlayer: null,
+  players: [],
+  units: [],
+  bases: [],
+  resourceNodes: [],
+  projectiles: [],
+  obstacles: [],
+  gameStatus: 'waiting',
+  selectedUnits: new Set(),
+  mapWidth: 1000,
+  mapHeight: 800,
+  selectedOpponent: null,
+  unitCounts: {}
 };
 
-let ws = null, gameOverShown = false;
-let chatUnreadCount = 0, chatOpen = false;
+let ws = null;
+let gameOverShown = false;
 let selectedEnemyId = null;
-let onlinePlayersCache = [];
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const miniCvs = document.getElementById('minimap');
 const miniCtx = miniCvs.getContext('2d');
-miniCvs.width = 130; miniCvs.height = 100;
+miniCvs.width = 130;
+miniCvs.height = 100;
 
 let camX = 0, camY = 0, zoom = 1.0;
 const GAME_W = 1000, GAME_H = 800;
@@ -218,50 +221,10 @@ function clampCamera() {
 function gToC(gx, gy) { return { x: (gx - camX) * zoom, y: (gy - camY) * zoom }; }
 function cToG(cx, cy) { return { x: cx / zoom + camX, y: cy / zoom + camY }; }
 
-canvas.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const delta = e.deltaY > 0 ? -0.15 : 0.15;
-  const r = canvas.getBoundingClientRect();
-  const mx = e.clientX - r.left;
-  const my = e.clientY - r.top;
-  const gBefore = cToG(mx, my);
-  zoom = Math.max(0.4, Math.min(3.0, zoom + delta));
-  const gAfter = cToG(mx, my);
-  camX += gBefore.x - gAfter.x;
-  camY += gBefore.y - gAfter.y;
-  clampCamera();
-  document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
-}, { passive: false });
-
-let lastPinchDist = 0;
-canvas.addEventListener('touchstart', (e) => {
-  if (e.touches.length === 2) {
-    lastPinchDist = Math.hypot(
-      e.touches[1].clientX - e.touches[0].clientX,
-      e.touches[1].clientY - e.touches[0].clientY
-    );
-  }
-}, { passive: true });
-canvas.addEventListener('touchmove', (e) => {
-  if (e.touches.length === 2) {
-    const d = Math.hypot(
-      e.touches[1].clientX - e.touches[0].clientX,
-      e.touches[1].clientY - e.touches[0].clientY
-    );
-    if (lastPinchDist > 0) changeZoom((d - lastPinchDist) * 0.01);
-    lastPinchDist = d;
-  }
-}, { passive: true });
-canvas.addEventListener('touchend', () => { lastPinchDist = 0; });
-
-miniCvs.addEventListener('click', (e) => {
-  const r = miniCvs.getBoundingClientRect();
-  const gx = (e.clientX - r.left) / miniCvs.width * GAME_W;
-  const gy = (e.clientY - r.top) / miniCvs.height * GAME_H;
-  camX = gx - (canvas.width / zoom) / 2;
-  camY = gy - (canvas.height / zoom) / 2;
-  clampCamera();
-});
+function switchScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
 
 function connectServer() {
   const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -269,80 +232,118 @@ function connectServer() {
   ws = new WebSocket(url);
   ws.onopen = () => {
     state.connected = true;
-    requestOnlinePlayers();
     document.getElementById('playerName').disabled = false;
-    document.getElementById('joinBtn').disabled = false;
-    document.getElementById('joinBtn').style.display = 'block';
+    document.getElementById('loginBtn').disabled = false;
+    document.getElementById('loginBtn').style.display = 'block';
   };
   ws.onclose = () => { state.connected = false; };
   ws.onerror = () => { state.connected = false; };
   ws.onmessage = (ev) => {
     try {
       const msg = JSON.parse(ev.data);
-      if (msg.type === 'JOIN_CONFIRMED') {
-        state.myPlayerId = msg.playerId;
-        state.myPlayer = { id:msg.playerId, name:document.getElementById('playerName').value, team:msg.team, kills:0, gold:500, energy:100 };
-        startGame();
+      if (msg.type === 'PLAYERS_LIST') {
+        updatePlayersList(msg.players || []);
       } else if (msg.type === 'GAME_STATE') {
         updateGameState(msg);
-      } else if (msg.type === 'CHAT_MESSAGE') {
-        addChatMessage(msg);
-      } else if (msg.type === 'PLAYERS_LIST') {
-        onlinePlayersCache = msg.players || [];
-        showPlayersList();
+      } else if (msg.type === 'JOIN_CONFIRMED') {
+        state.myPlayerId = msg.playerId;
+        state.myPlayer = {
+          id: msg.playerId,
+          name: document.getElementById('playerName').value,
+          team: msg.team,
+          kills: 0,
+          gold: 500,
+          energy: 100,
+          baseX: msg.baseX,
+          baseY: msg.baseY
+        };
+        switchScreen('gameScreen');
+        startGameLoop();
       }
     } catch(e) { console.error(e); }
   };
 }
 
-function requestOnlinePlayers() {
+function goToGarage() {
+  const name = document.getElementById('playerName').value;
+  if (!name.trim() || !state.connected) return;
+  
+  switchScreen('garageScreen');
+  
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'GET_PLAYERS' }));
   }
+  
+  buildGarage();
+  updateGarageUI();
 }
 
-function showPlayersList() {
-  const container = document.getElementById('playersContainer');
-  const list = document.getElementById('playersList');
-  if (onlinePlayersCache.length === 0) {
-    container.style.display = 'none';
-    return;
-  }
-  container.style.display = 'block';
-  list.innerHTML = onlinePlayersCache.map(p => {
-    const teamColor = {blue:'#0088ff',red:'#ff2200',green:'#00ff00',yellow:'#ffff00',purple:'#ff00ff',orange:'#ff8800'}[p.team] || '#fff';
+function buildGarage() {
+  const garageUnits = document.getElementById('garageUnits');
+  garageUnits.innerHTML = UNIT_KEYS.map(type => {
+    const d = UNIT_DEFS[type];
     return `
-      <div class="player-item ${selectedEnemyId === p.id ? 'selected' : ''}" onclick="selectEnemy('${p.id}')">
-        <div>
-          <div class="player-name">${p.name}</div>
-          <span class="player-team" style="background:${teamColor}33;color:${teamColor}">${p.team.toUpperCase()}</span>
-        </div>
-        <div class="player-stats">${p.kills}K</div>
+      <div class="unit-card" onclick="selectUnit('${type}')">
+        <div class="icon">${d.icon}</div>
+        <div class="name">${d.name}</div>
+        <div class="cost">${d.gold}G</div>
+        <div class="count" id="count_${type}">0</div>
       </div>
     `;
   }).join('');
 }
 
-function selectEnemy(playerId) {
-  selectedEnemyId = playerId;
-  showPlayersList();
+function updateGarageUI() {
+  if (!state.myPlayer) return;
+  document.getElementById('garagePlayerName').textContent = state.myPlayer.name;
+  document.getElementById('garageTeam').textContent = state.myPlayer.team.toUpperCase();
+  document.getElementById('garageGold').textContent = Math.round(state.myPlayer.gold);
+  document.getElementById('garageEnergy').textContent = Math.round(state.myPlayer.energy);
 }
 
-function declareWar() {
-  if (!selectedEnemyId || !state.connected) return;
+function updatePlayersList(players) {
+  const list = document.getElementById('opponentsList');
+  list.innerHTML = players.filter(p => p.id !== state.myPlayerId).map(p => `
+    <div class="opponent ${selectedEnemyId === p.id ? 'selected' : ''}" onclick="selectOpponent('${p.id}', this)">
+      <div class="opponent-name">${p.name}</div>
+      <div class="opponent-stats">Team: ${p.team.toUpperCase()} | Kills: ${p.kills}</div>
+    </div>
+  `).join('');
+}
+
+function selectOpponent(playerId, el) {
+  document.querySelectorAll('.opponent').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedEnemyId = playerId;
+}
+
+function selectUnit(type) {
+  console.log('Selected unit:', type);
+}
+
+function startWar() {
+  if (!selectedEnemyId) {
+    alert('Alege adversar!');
+    return;
+  }
   const name = document.getElementById('playerName').value;
-  if (!name.trim()) return;
+  if (!name.trim() || !ws || ws.readyState !== WebSocket.OPEN) return;
+  
   ws.send(JSON.stringify({ type: 'JOIN_GAME', playerName: name }));
 }
 
-function startGame() {
-  gameOverShown = false;
-  document.getElementById('login').style.display = 'none';
-  document.getElementById('gameScreen').style.display = 'flex';
-  state.gameStarted = true;
-  buildSpawnBar();
-  requestGameState();
-  gameLoop();
+function backToLogin() {
+  switchScreen('loginScreen');
+  if (ws) ws.close();
+  ws = null;
+  state.connected = false;
+}
+
+function backToGarage() {
+  switchScreen('garageScreen');
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'GET_PLAYERS' }));
+  }
 }
 
 function updateGameState(msg) {
@@ -355,324 +356,46 @@ function updateGameState(msg) {
   state.gameStatus = msg.gameStatus || 'waiting';
   state.mapWidth = msg.mapWidth || 1000;
   state.mapHeight = msg.mapHeight || 800;
+  
   if (state.myPlayerId) {
     const me = state.players.find(p => p.id === state.myPlayerId);
     if (me) state.myPlayer = me;
   }
-  updateUI();
-  if (msg.gameStatus === 'finished' && !gameOverShown) {
-    gameOverShown = true;
-    showGameOver(msg.winner);
-  }
+  updateGameUI();
 }
 
-function requestGameState() {
-  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'GET_STATE' }));
-}
-
-function updateUI() {
+function updateGameUI() {
   if (!state.myPlayer) return;
   document.getElementById('playerNameDisplay').textContent = state.myPlayer.name;
   document.getElementById('unitsCount').textContent = state.units.filter(u => u.playerId === state.myPlayerId).length;
   document.getElementById('killsCount').textContent = state.myPlayer.kills;
   document.getElementById('goldDisplay').textContent = Math.round(state.myPlayer.gold);
   document.getElementById('energyDisplay').textContent = Math.round(state.myPlayer.energy);
-
-  const lbEl = document.getElementById('lbPanel');
-  const sorted = [...state.players].sort((a, b) => b.kills - a.kills);
-  lbEl.innerHTML = sorted.slice(0, 5).map((p, i) => {
-    const c = {blue:'#0088ff',red:'#ff2200',green:'#00ff00',yellow:'#ffff00',purple:'#ff00ff',orange:'#ff8800'}[p.team] || '#fff';
-    return `<div class="lb-item" style="border-color:${c}33;color:${c}">#${i+1} ${p.name} ${p.kills}K</div>`;
-  }).join('');
-
-  const collCount = state.units.filter(u => u.playerId === state.myPlayerId && u.type === 'collector').length;
-  const colBtn = document.getElementById('sb_collector');
-  if (colBtn) {
-    const badge = colBtn.querySelector('.badge');
-    if (badge) badge.textContent = `${collCount}/5`;
-    colBtn.classList.toggle('disabled-btn', collCount >= 5);
-  }
 }
 
 function buildSpawnBar() {
   const bar = document.getElementById('spawnBar');
-  bar.innerHTML = '';
-  UNIT_KEYS.forEach(type => {
+  bar.innerHTML = UNIT_KEYS.map(type => {
     const d = UNIT_DEFS[type];
-    const btn = document.createElement('div');
-    btn.className = 'spawn-btn';
-    btn.id = `sb_${type}`;
-    btn.innerHTML = `
-      <div class="s-icon">${d.icon}</div>
-      <div class="s-name">${d.name}</div>
-      <div class="s-cost">${d.gold}G ${d.energy}E</div>
-      ${type === 'collector' ? `<div class="badge">0/5</div>` : ''}
+    return `
+      <div class="spawn-btn" ondblclick="spawnUnit('${type}')">
+        <div class="icon">${d.icon}</div>
+        <div class="name">${d.name}</div>
+        <div class="cost">${d.gold}G</div>
+      </div>
     `;
-    btn.addEventListener('click', (e) => { e.stopPropagation(); showUnitInfo(type, btn); });
-    btn.addEventListener('dblclick', (e) => { e.stopPropagation(); spawnUnit(type); });
-    let lastTouchTime = 0;
-    btn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      const now = Date.now();
-      if (now - lastTouchTime < 350) {
-        spawnUnit(type);
-      } else {
-        showUnitInfo(type, btn);
-      }
-      lastTouchTime = now;
-    });
-    bar.appendChild(btn);
-  });
+  }).join('');
 }
-
-let infoTimeout = null;
-function showUnitInfo(type, btnEl) {
-  const d = UNIT_DEFS[type];
-  const panel = document.getElementById('unitInfo');
-  document.getElementById('ui-name').textContent = d.icon + ' ' + d.name;
-  document.getElementById('ui-hp').textContent = d.hp;
-  document.getElementById('ui-dmg').textContent = d.dmg;
-  document.getElementById('ui-range').textContent = d.range || '—';
-  document.getElementById('ui-spd').textContent = d.spd;
-  document.getElementById('ui-cost').textContent = `${d.gold}G / ${d.energy}E`;
-
-  const r = btnEl.getBoundingClientRect();
-  panel.style.display = 'block';
-  let left = r.left - 210;
-  if (left < 4) left = r.right + 6;
-  let top = r.top;
-  if (top + 180 > window.innerHeight) top = window.innerHeight - 185;
-  panel.style.left = left + 'px';
-  panel.style.top = top + 'px';
-
-  clearTimeout(infoTimeout);
-  infoTimeout = setTimeout(() => { panel.style.display = 'none'; }, 4000);
-}
-
-document.addEventListener('click', () => {
-  document.getElementById('unitInfo').style.display = 'none';
-});
 
 function spawnUnit(type) {
   if (!ws || ws.readyState !== WebSocket.OPEN || !state.myPlayer) return;
-  if (type === 'collector') {
-    const cnt = state.units.filter(u => u.playerId === state.myPlayerId && u.type === 'collector').length;
-    if (cnt >= 5) return;
-  }
   ws.send(JSON.stringify({ type: 'SPAWN_UNIT', unitType: type }));
 }
-
-function toggleChat() {
-  const bd = document.getElementById('chatBackdrop');
-  chatOpen = !chatOpen;
-  bd.classList.toggle('active', chatOpen);
-  if (chatOpen) {
-    chatUnreadCount = 0;
-    const cm = document.getElementById('chatMessages');
-    cm.scrollTop = cm.scrollHeight;
-    setTimeout(() => document.getElementById('chatInput').focus(), 100);
-  }
-}
-function closeChatIfOutside(e) {
-  if (e.target === document.getElementById('chatBackdrop')) toggleChat();
-}
-function sendChatMessage() {
-  const inp = document.getElementById('chatInput');
-  const msg = inp.value.trim();
-  if (!msg || !ws || ws.readyState !== WebSocket.OPEN) return;
-  ws.send(JSON.stringify({ type: 'CHAT_MESSAGE', message: msg }));
-  inp.value = '';
-}
-function handleChatKeypress(e) {
-  if (e.key === 'Enter') sendChatMessage();
-}
-function addChatMessage(msg) {
-  const cm = document.getElementById('chatMessages');
-  const el = document.createElement('div');
-  el.className = `chat-message ${msg.team}`;
-  el.textContent = `${msg.playerName}: ${msg.message}`;
-  cm.appendChild(el);
-  cm.scrollTop = cm.scrollHeight;
-  if (!chatOpen) chatUnreadCount++;
-}
-
-const DRAG_THRESHOLD = 8, UNIT_HIT_RADIUS = 14;
-let isDragging = false, dragStartX = 0, dragStartY = 0, dragCurrentX = 0, dragCurrentY = 0;
-
-function unitAtGamePos(gx, gy) {
-  for (const u of state.units) {
-    if (u.playerId !== state.myPlayerId) continue;
-    if (Math.hypot(u.x - gx, u.y - gy) < UNIT_HIT_RADIUS) return u;
-  }
-  return null;
-}
-function unitsInRect(x1, y1, x2, y2) {
-  const [mnX, mxX] = [Math.min(x1, x2), Math.max(x1, x2)];
-  const [mnY, mxY] = [Math.min(y1, y2), Math.max(y1, y2)];
-  return state.units.filter(u => u.playerId === state.myPlayerId && u.x >= mnX && u.x <= mxX && u.y >= mnY && u.y <= mxY);
-}
-function moveSelectedUnits(gx, gy) {
-  if (!state.selectedUnits.size) return;
-  for (const id of state.selectedUnits)
-    if (ws && ws.readyState === WebSocket.OPEN)
-      ws.send(JSON.stringify({ type: 'MOVE_UNIT', unitId: id, x: gx, y: gy }));
-}
-
-canvas.addEventListener('mousedown', (e) => {
-  if (e.button !== 0) return;
-  dragStartX = e.clientX; dragStartY = e.clientY;
-  dragCurrentX = e.clientX; dragCurrentY = e.clientY;
-  isDragging = false;
-  e.preventDefault();
-});
-canvas.addEventListener('mousemove', (e) => {
-  if (!(e.buttons & 1)) return;
-  dragCurrentX = e.clientX; dragCurrentY = e.clientY;
-  if (Math.abs(dragCurrentX - dragStartX) > DRAG_THRESHOLD || Math.abs(dragCurrentY - dragStartY) > DRAG_THRESHOLD) isDragging = true;
-});
-canvas.addEventListener('mouseup', (e) => {
-  if (e.button !== 0) return;
-  const r = canvas.getBoundingClientRect();
-  const g = cToG(e.clientX - r.left, e.clientY - r.top);
-  if (isDragging) {
-    const sg = cToG(dragStartX - r.left, dragStartY - r.top);
-    const sel = unitsInRect(sg.x, sg.y, g.x, g.y);
-    if (!e.ctrlKey && !e.shiftKey) state.selectedUnits.clear();
-    sel.forEach(u => state.selectedUnits.add(u.id));
-  } else {
-    const clicked = unitAtGamePos(g.x, g.y);
-    if (clicked) {
-      if (e.ctrlKey || e.shiftKey) {
-        state.selectedUnits.has(clicked.id) ? state.selectedUnits.delete(clicked.id) : state.selectedUnits.add(clicked.id);
-      } else {
-        state.selectedUnits.clear();
-        state.selectedUnits.add(clicked.id);
-      }
-    } else if (state.selectedUnits.size > 0) {
-      moveSelectedUnits(g.x, g.y);
-    } else if (!e.ctrlKey && !e.shiftKey) {
-      state.selectedUnits.clear();
-    }
-  }
-  isDragging = false;
-});
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-
-let touchStartX = 0, touchStartY = 0, touchIsDrag = false;
-canvas.addEventListener('touchstart', (e) => {
-  if (e.touches.length === 1) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    touchIsDrag = false;
-  }
-}, { passive: true });
-canvas.addEventListener('touchmove', (e) => {
-  if (e.touches.length === 1) {
-    if (Math.abs(e.touches[0].clientX - touchStartX) > DRAG_THRESHOLD || Math.abs(e.touches[0].clientY - touchStartY) > DRAG_THRESHOLD) touchIsDrag = true;
-  }
-}, { passive: true });
-canvas.addEventListener('touchend', (e) => {
-  if (e.changedTouches.length !== 1) return;
-  const t = e.changedTouches[0];
-  const r = canvas.getBoundingClientRect();
-  const g = cToG(t.clientX - r.left, t.clientY - r.top);
-  if (touchIsDrag) {
-    const sg = cToG(touchStartX - r.left, touchStartY - r.top);
-    const sel = unitsInRect(sg.x, sg.y, g.x, g.y);
-    state.selectedUnits.clear();
-    sel.forEach(u => state.selectedUnits.add(u.id));
-  } else {
-    const clicked = unitAtGamePos(g.x, g.y);
-    if (clicked) {
-      state.selectedUnits.clear();
-      state.selectedUnits.add(clicked.id);
-    } else if (state.selectedUnits.size > 0) {
-      moveSelectedUnits(g.x, g.y);
-    } else {
-      state.selectedUnits.clear();
-    }
-  }
-  touchIsDrag = false;
-});
 
 const TEAM_COLORS = {
   blue: '#0088ff', red: '#ff2200', green: '#00ff00',
   yellow: '#ffff00', purple: '#ff00ff', orange: '#ff8800'
 };
-
-function drawUnitShape(ctx, type, x, y, size, color) {
-  ctx.fillStyle = color;
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 1;
-
-  switch (type) {
-    case 'soldier':
-      ctx.beginPath(); ctx.arc(x, y - size * 0.4, size * 0.45, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(x, y - size * 0.05);
-      ctx.lineTo(x - size * 0.6, y + size * 0.8);
-      ctx.lineTo(x + size * 0.6, y + size * 0.8);
-      ctx.closePath(); ctx.fill();
-      break;
-    case 'tank':
-      ctx.fillRect(x - size, y - size * 0.7, size * 2, size * 1.4);
-      ctx.fillStyle = color + 'cc';
-      ctx.fillRect(x - size * 0.4, y - size * 1.1, size * 0.8, size * 0.5);
-      ctx.fillStyle = '#000'; ctx.fillRect(x - size * 0.1, y - size * 1.5, size * 0.2, size * 0.5);
-      ctx.fillStyle = color;
-      break;
-    case 'fighter':
-      ctx.beginPath();
-      ctx.moveTo(x, y - size * 1.1);
-      ctx.lineTo(x - size * 0.9, y + size * 0.7);
-      ctx.lineTo(x, y + size * 0.2);
-      ctx.lineTo(x + size * 0.9, y + size * 0.7);
-      ctx.closePath(); ctx.fill();
-      break;
-    case 'cannon':
-      ctx.fillRect(x - size * 0.8, y - size * 0.5, size * 1.6, size);
-      ctx.fillRect(x - size * 0.1, y - size * 1.4, size * 0.2, size);
-      break;
-    case 'helicopter':
-      ctx.beginPath(); ctx.ellipse(x, y, size * 0.6, size * 0.9, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = color; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x - size * 1.2, y - size * 0.8); ctx.lineTo(x + size * 1.2, y - size * 0.8); ctx.stroke();
-      break;
-    case 'bomber':
-      ctx.beginPath();
-      ctx.moveTo(x, y - size * 1.2);
-      ctx.lineTo(x + size * 1.1, y);
-      ctx.lineTo(x, y + size * 0.8);
-      ctx.lineTo(x - size * 1.1, y);
-      ctx.closePath(); ctx.fill();
-      break;
-    case 'collector':
-      ctx.fillRect(x - size * 0.8, y - size * 0.8, size * 1.6, size * 1.6);
-      ctx.fillStyle = '#000';
-      ctx.beginPath(); ctx.moveTo(x, y - size * 0.5); ctx.lineTo(x, y + size * 0.3);
-      ctx.moveTo(x - size * 0.3, y); ctx.lineTo(x, y + size * 0.3); ctx.lineTo(x + size * 0.3, y);
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
-      break;
-    case 'constructor':
-      ctx.fillRect(x - size * 0.8, y - size * 0.7, size * 1.6, size * 1.4);
-      ctx.fillStyle = '#ff8800';
-      ctx.fillRect(x - size * 0.3, y - size * 1.2, size * 0.6, size * 0.6);
-      break;
-    case 'turret':
-      ctx.fillRect(x - size, y - size * 0.8, size * 2, size * 1.6);
-      ctx.fillStyle = '#888';
-      ctx.beginPath(); ctx.arc(x, y, size * 0.6, 0, Math.PI * 2); ctx.fill();
-      break;
-    case 'barracks':
-      ctx.fillRect(x - size * 1.2, y - size, size * 2.4, size * 2);
-      ctx.fillStyle = '#666';
-      for (let i = 0; i < 3; i++) {
-        ctx.fillRect(x - size * 0.9 + i * size * 0.9, y - size * 0.5, size * 0.6, size * 0.6);
-      }
-      break;
-    default:
-      ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
-  }
-}
 
 function drawGame() {
   const W = canvas.width, H = canvas.height;
@@ -683,7 +406,6 @@ function drawGame() {
   ctx.fillRect(0, 0, W, H);
 
   ctx.strokeStyle = 'rgba(0,255,136,0.03)';
-  ctx.lineWidth = 1;
   const gridSz = 40 * zoom;
   const offX = ((-camX * zoom) % gridSz + gridSz) % gridSz;
   const offY = ((-camY * zoom) % gridSz + gridSz) % gridSz;
@@ -694,190 +416,81 @@ function drawGame() {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
   }
 
-  // Draw obstacles
   state.obstacles.forEach(obs => {
     const { x, y } = gToC(obs.x, obs.y);
-    const r = obs.radius * zoom;
     ctx.fillStyle = obs.type === 'rock' ? 'rgba(100,100,100,0.6)' : 'rgba(34,139,34,0.4)';
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = obs.type === 'rock' ? '#666' : '#228B22';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, obs.radius * zoom, 0, Math.PI * 2); ctx.fill();
   });
 
-  if (isDragging) {
-    const cr = canvas.getBoundingClientRect();
-    const bx = dragStartX - cr.left, by = dragStartY - cr.top, ex = dragCurrentX - cr.left, ey = dragCurrentY - cr.top;
-    ctx.strokeStyle = 'rgba(0,255,136,0.85)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
-    ctx.strokeRect(Math.min(bx, ex), Math.min(by, ey), Math.abs(ex - bx), Math.abs(ey - by));
-    ctx.fillStyle = 'rgba(0,255,136,0.07)';
-    ctx.fillRect(Math.min(bx, ex), Math.min(by, ey), Math.abs(ex - bx), Math.abs(ey - by));
-    ctx.setLineDash([]);
-  }
-
-  // Resource nodes
   state.resourceNodes.forEach(node => {
     const { x, y } = gToC(node.x, node.y);
-    const pct = node.amount / node.maxAmount;
-    const r = 11 * zoom;
-    ctx.shadowBlur = 10; ctx.shadowColor = '#ffcc00';
-    ctx.fillStyle = `rgba(255,200,0,${0.2 + pct * 0.5})`;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = pct > 0.4 ? '#ffdd00' : '#ff9900';
-    ctx.font = `${Math.round(8 * zoom)}px monospace`; ctx.textAlign = 'center';
-    ctx.fillText(Math.round(node.amount), x, y + 3 * zoom);
+    ctx.fillStyle = 'rgba(255,200,0,0.5)';
+    ctx.beginPath(); ctx.arc(x, y, 11 * zoom, 0, Math.PI * 2); ctx.fill();
   });
 
-  // Bases
   state.bases.forEach(base => {
     const { x, y } = gToC(base.x, base.y);
     const color = TEAM_COLORS[base.team] || '#fff';
-    const hPct = Math.max(0, base.health / base.maxHealth);
     const sz = 22 * zoom;
-    ctx.shadowBlur = 14; ctx.shadowColor = color;
     ctx.fillStyle = color + '44'; ctx.fillRect(x - sz, y - sz, sz * 2, sz * 2);
     ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.strokeRect(x - sz, y - sz, sz * 2, sz * 2);
-    ctx.shadowBlur = 0;
-    const bw = sz * 2 + 4;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x - sz - 2, y - sz - 10 * zoom, bw, 5 * zoom);
-    ctx.fillStyle = hPct > 0.5 ? '#00ff88' : hPct > 0.25 ? '#ffaa00' : '#ff2200';
-    ctx.fillRect(x - sz - 2, y - sz - 10 * zoom, bw * hPct, 5 * zoom);
-    ctx.fillStyle = '#fff'; ctx.font = `${Math.round(8 * zoom)}px monospace`; ctx.textAlign = 'center';
-    ctx.fillText(Math.round(base.health) + '/' + base.maxHealth, x, y - sz - 12 * zoom);
   });
 
-  // Move target lines
-  state.units.forEach(u => {
-    if (!state.selectedUnits.has(u.id) || u.targetX == null) return;
-    const { x: ux, y: uy } = gToC(u.x, u.y);
-    const { x: tx, y: ty } = gToC(u.targetX, u.targetY);
-    const color = (TEAM_COLORS[u.team] || '#fff') + '50';
-    ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
-    ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(tx, ty); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = '#ffff0080'; ctx.beginPath(); ctx.arc(tx, ty, 4 * zoom, 0, Math.PI * 2); ctx.fill();
-  });
-
-  // Units
   state.units.forEach(u => {
     const { x, y } = gToC(u.x, u.y);
     const color = TEAM_COLORS[u.team] || '#fff';
     const sz = 5 * zoom;
-    const hPct = u.health / u.maxHealth;
-
-    if (state.selectedUnits.has(u.id) && u.range > 0) {
-      ctx.strokeStyle = color + '25'; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
-      ctx.beginPath(); ctx.arc(x, y, u.range * zoom, 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    if (u.isShooting) { ctx.shadowBlur = 12; ctx.shadowColor = color; }
-
-    drawUnitShape(ctx, u.type, x, y, sz, color);
-    ctx.shadowBlur = 0;
-
-    if (u.type === 'collector') {
-      const carryPct = u.carrying / 150;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x - sz * 1.1, y + sz * 1.1, sz * 2.2, 3 * zoom);
-      ctx.fillStyle = u.returning ? '#00ff88' : '#ffcc00';
-      ctx.fillRect(x - sz * 1.1, y + sz * 1.1, sz * 2.2 * carryPct, 3 * zoom);
-    }
-
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2); ctx.fill();
     if (state.selectedUnits.has(u.id)) {
       ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(x, y, sz * 1.5, 0, Math.PI * 2); ctx.stroke();
     }
-
-    const bw = sz * 2.2;
-    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x - sz * 1.1, y - sz * 1.6, bw, 2.5 * zoom);
-    ctx.fillStyle = hPct > 0.5 ? '#00ff88' : hPct > 0.25 ? '#ffaa00' : '#ff2200';
-    ctx.fillRect(x - sz * 1.1, y - sz * 1.6, bw * hPct, 2.5 * zoom);
   });
 
-  // Projectiles
   state.projectiles.forEach(proj => {
     const { x, y } = gToC(proj.x, proj.y);
     const color = TEAM_COLORS[proj.team] || '#fff';
-    ctx.shadowBlur = 5; ctx.shadowColor = color;
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 2.5 * zoom, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 1.5 * zoom, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y, 2 * zoom, 0, Math.PI * 2); ctx.fill();
   });
-
-  if (state.selectedUnits.size > 0) {
-    ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(W - 140, 8, 132, 22);
-    ctx.fillStyle = '#ffff00'; ctx.font = '11px monospace'; ctx.textAlign = 'right';
-    ctx.fillText(`✔ ${state.selectedUnits.size} selected`, W - 10, 24);
-    ctx.textAlign = 'left';
-  }
-  if (state.gameStatus === 'waiting') {
-    ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(W / 2 - 110, 10, 220, 28);
-    ctx.fillStyle = '#ffaa00'; ctx.font = '13px monospace'; ctx.textAlign = 'center';
-    ctx.fillText('⏳ Waiting for players...', W / 2, 28);
-    ctx.textAlign = 'left';
-  }
 
   drawMinimap();
 }
 
 function drawMinimap() {
   const mw = miniCvs.width, mh = miniCvs.height;
-  miniCtx.fillStyle = 'rgba(5,8,22,0.92)'; miniCtx.fillRect(0, 0, mw, mh);
-  miniCtx.strokeStyle = 'rgba(0,255,136,0.3)'; miniCtx.lineWidth = 1;
-  miniCtx.strokeRect(0, 0, mw, mh);
-
+  miniCtx.fillStyle = 'rgba(5,8,22,0.92)';
+  miniCtx.fillRect(0, 0, mw, mh);
   const sx = mw / GAME_W, sy = mh / GAME_H;
-
-  state.obstacles.forEach(obs => {
-    miniCtx.fillStyle = obs.type === 'rock' ? 'rgba(100,100,100,0.5)' : 'rgba(34,139,34,0.4)';
-    miniCtx.fillRect(obs.x * sx - 2, obs.y * sy - 2, 4, 4);
-  });
-
-  state.resourceNodes.forEach(n => {
-    const pct = n.amount / n.maxAmount;
-    miniCtx.fillStyle = `rgba(255,200,0,${0.4 + pct * 0.5})`;
-    miniCtx.fillRect(n.x * sx - 2, n.y * sy - 2, 4, 4);
-  });
-
+  
   state.bases.forEach(b => {
     miniCtx.fillStyle = TEAM_COLORS[b.team] || '#fff';
     miniCtx.fillRect(b.x * sx - 4, b.y * sy - 4, 8, 8);
   });
-
+  
   state.units.forEach(u => {
     miniCtx.fillStyle = TEAM_COLORS[u.team] || '#fff';
-    miniCtx.fillRect(u.x * sx - 1, u.y * sy - 1, 2.5, 2.5);
+    miniCtx.fillRect(u.x * sx - 1, u.y * sy - 1, 2, 2);
   });
-
-  const vx = camX * sx, vy = camY * sy;
-  const vw = (canvas.width / zoom) * sx, vh = (canvas.height / zoom) * sy;
-  miniCtx.strokeStyle = 'rgba(255,255,255,0.5)'; miniCtx.lineWidth = 1;
-  miniCtx.strokeRect(vx, vy, Math.min(vw, mw), Math.min(vh, mh));
 }
 
 function gameLoop() {
   drawGame();
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'GET_STATE' }));
+  }
   requestAnimationFrame(gameLoop);
 }
 
-function showGameOver(winner) {
-  const isWin = winner === state.myPlayer?.team;
-  const el = document.createElement('div'); el.className = 'game-over';
-  el.innerHTML = `<div class="game-over-card">
-    <div class="game-over-title">${isWin ? '🏆 VICTORY' : '💀 DEFEAT'}</div>
-    <p style="margin:.5rem 0">Team: <b style="color:${TEAM_COLORS[winner] || '#fff'}">${(winner || '').toUpperCase()}</b></p>
-    <p style="margin:.5rem 0">Kills: <b>${state.myPlayer?.kills || 0}</b></p>
-    <button class="login-btn" onclick="location.reload()" style="margin-top:1rem">PLAY AGAIN</button>
-  </div>`;
-  document.body.appendChild(el);
+function startGameLoop() {
+  buildSpawnBar();
+  gameLoop();
 }
 
-setInterval(() => {
-  if (state.gameStarted && state.connected) requestGameState();
-}, 100);
-setInterval(() => {
-  if (!state.gameStarted && state.connected) requestOnlinePlayers();
-}, 2000);
+// Initialize
+document.getElementById('loginBtn').disabled = true;
+document.getElementById('loginBtn').style.display = 'none';
 </script>
 </body>
 </html>
