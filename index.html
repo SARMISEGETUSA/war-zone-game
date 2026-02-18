@@ -4,49 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>WAR ZONE V3.1</title>
+<title>WAR ZONE V3.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Righteous&family=Inconsolata:wght@400;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
-:root{--primary:#00ff88;--secondary:#ff0055;--bg:#0a0e27;--panel:rgba(21,27,58,0.95);}
-html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'Inconsolata',monospace;overflow:hidden;}
+:root{--primary:#00ff88;--secondary:#ff0055;--bg:#0a0e27;--panel:rgba(21,27,58,0.95);--scale:1;}
+
+/* ===== FIX #2: RESPONSIVE SCALING ===== */
+html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'Inconsolata',monospace;overflow:hidden;font-size:clamp(10px, 1vw, 18px);}
 
 .screen{display:none;width:100%;height:100%;position:absolute;top:0;left:0;}
 .screen.active{display:flex;}
 
 /* LOGIN SCREEN */
 #loginScreen{align-items:center;justify-content:center;background:rgba(10,14,39,0.97);}
-.login-container{background:linear-gradient(135deg,#151b3a,#0f1428);border:2px solid var(--primary);padding:2rem;border-radius:20px;max-width:400px;width:90%;}
-.login-title{font-family:'Righteous',sans-serif;font-size:2rem;color:var(--primary);margin-bottom:1.5rem;text-align:center;}
-.login-input{width:100%;background:rgba(15,20,40,0.8);border:2px solid rgba(0,255,136,0.3);color:#fff;padding:.8rem;margin-bottom:.8rem;font-family:monospace;border-radius:8px;font-size:1rem;}
-.login-btn{width:100%;background:linear-gradient(135deg,var(--primary),#00dd88);color:#000;border:none;padding:.8rem;font-weight:bold;cursor:pointer;border-radius:8px;margin-bottom:.5rem;min-height:44px;font-size:1rem;}
+.login-container{background:linear-gradient(135deg,#151b3a,#0f1428);border:2px solid var(--primary);padding:clamp(1rem,2vw,2rem);border-radius:20px;max-width:400px;width:90%;}
+.login-title{font-family:'Righteous',sans-serif;font-size:clamp(1.5rem,3vw,2rem);color:var(--primary);margin-bottom:clamp(0.8rem,2vh,1.5rem);text-align:center;}
+.login-input{width:100%;background:rgba(15,20,40,0.8);border:2px solid rgba(0,255,136,0.3);color:#fff;padding:clamp(0.5rem,1vh,0.8rem);margin-bottom:clamp(0.5rem,1vh,0.8rem);font-family:monospace;border-radius:8px;font-size:clamp(0.8rem,1vw,1rem);}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--primary),#00dd88);color:#000;border:none;padding:clamp(0.6rem,1vh,0.8rem);font-weight:bold;cursor:pointer;border-radius:8px;margin-bottom:0.5rem;min-height:44px;font-size:clamp(0.8rem,1vw,1rem);}
 .login-btn:hover{transform:scale(1.02);}
 .login-btn:disabled{opacity:0.5;cursor:not-allowed;}
 
 /* GARAGE/LOBBY SCREEN */
 #garageScreen{flex-direction:column;background:var(--bg);z-index:100;}
-#garageContent{display:flex;height:100%;overflow:hidden;}
-#garageLeft{flex:1;padding:20px;border-right:2px solid var(--primary);overflow-y:auto;background:rgba(0,0,0,0.3);}
-#garageRight{flex:2;padding:20px;overflow-y:auto;}
-.garage-title{font-family:'Righteous',sans-serif;font-size:1.5rem;color:var(--primary);margin-bottom:15px;border-bottom:2px solid var(--primary);padding-bottom:10px;}
-.player-info{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);padding:12px;border-radius:8px;margin-bottom:15px;}
-.player-info p{font-size:.85rem;margin:5px 0;color:#ccc;}
+#garageContent{display:flex;height:100%;overflow:hidden;gap:clamp(5px,1vw,20px);}
+#garageLeft{flex:1;padding:clamp(10px,2vw,20px);border-right:2px solid var(--primary);overflow-y:auto;background:rgba(0,0,0,0.3);}
+#garageRight{flex:2;padding:clamp(10px,2vw,20px);overflow-y:auto;}
+.garage-title{font-family:'Righteous',sans-serif;font-size:clamp(1.2rem,2vw,1.5rem);color:var(--primary);margin-bottom:clamp(8px,1vh,15px);border-bottom:2px solid var(--primary);padding-bottom:10px;}
+.player-info{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);padding:clamp(8px,1vh,12px);border-radius:8px;margin-bottom:clamp(8px,1vh,15px);}
+.player-info p{font-size:clamp(0.7rem,0.9vw,0.85rem);margin:5px 0;color:#ccc;}
 .player-info p span{color:var(--primary);font-weight:bold;}
-.units-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
-.unit-card{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);padding:10px;border-radius:8px;cursor:pointer;transition:all .2s;text-align:center;}
+.units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:clamp(6px,1vw,10px);margin-bottom:clamp(10px,2vh,20px);}
+.unit-card{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);padding:clamp(6px,1vh,10px);border-radius:8px;cursor:pointer;transition:all .2s;text-align:center;}
 .unit-card:hover{background:rgba(0,255,136,0.2);border-color:var(--primary);}
-.unit-card .icon{font-size:2rem;margin-bottom:5px;}
-.unit-card .name{font-size:.7rem;font-weight:bold;color:var(--primary);}
-.unit-card .cost{font-size:.6rem;color:#888;}
-.unit-card .count{background:var(--secondary);color:#fff;padding:2px 6px;border-radius:4px;font-size:.6rem;margin-top:5px;display:inline-block;}
-.opponents-list{display:flex;flex-direction:column;gap:10px;}
-.opponent{background:rgba(0,255,136,0.1);border:2px solid rgba(0,255,136,0.3);padding:12px;border-radius:8px;cursor:pointer;transition:all .2s;}
+.unit-card .icon{font-size:clamp(1.5rem,2vw,2rem);margin-bottom:5px;}
+.unit-card .name{font-size:clamp(0.5rem,0.8vw,0.7rem);font-weight:bold;color:var(--primary);}
+.unit-card .cost{font-size:clamp(0.45rem,0.7vw,0.6rem);color:#888;}
+.opponents-list{display:flex;flex-direction:column;gap:clamp(6px,1vh,10px);}
+.opponent{background:rgba(0,255,136,0.1);border:2px solid rgba(0,255,136,0.3);padding:clamp(8px,1vh,12px);border-radius:8px;cursor:pointer;transition:all .2s;}
 .opponent:hover{background:rgba(0,255,136,0.2);border-color:var(--primary);}
 .opponent.selected{background:rgba(255,0,85,0.2);border-color:var(--secondary);}
-.opponent-name{font-weight:bold;color:#fff;font-size:.85rem;}
-.opponent-stats{font-size:.7rem;color:#aaa;margin-top:5px;}
-.garage-buttons{display:flex;gap:10px;margin-top:20px;}
-.garage-btn{flex:1;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:.85rem;transition:all .2s;}
+.opponent-name{font-weight:bold;color:#fff;font-size:clamp(0.75rem,0.9vw,0.85rem);}
+.opponent-stats{font-size:clamp(0.6rem,0.8vw,0.7rem);color:#aaa;margin-top:5px;}
+.garage-buttons{display:flex;gap:clamp(6px,1vw,10px);margin-top:clamp(10px,2vh,20px);flex-wrap:wrap;}
+.garage-btn{flex:1;min-width:100px;padding:clamp(8px,1vh,12px);border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:clamp(0.7rem,0.9vw,0.85rem);transition:all .2s;}
 .btn-start{background:linear-gradient(135deg,var(--primary),#00dd88);color:#000;}
 .btn-start:hover{transform:scale(1.05);}
 .btn-back{background:rgba(100,100,100,0.3);color:#ccc;border:1px solid rgba(100,100,100,0.5);}
@@ -54,29 +55,54 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
 
 /* GAME SCREEN */
 #gameScreen{flex-direction:column;background:#000;z-index:50;}
-#topBar{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--panel);border-bottom:2px solid var(--primary);flex-shrink:0;flex-wrap:wrap;}
-.top-stat{font-size:.7rem;padding:3px 8px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:6px;white-space:nowrap;}
+#topBar{display:flex;align-items:center;gap:clamp(3px,0.5vw,8px);padding:clamp(3px,0.5vh,8px);background:var(--panel);border-bottom:2px solid var(--primary);flex-shrink:0;flex-wrap:wrap;}
+.top-stat{font-size:clamp(0.6rem,0.8vw,0.8rem);padding:clamp(2px,0.3vh,4px) clamp(4px,1vw,8px);background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:6px;white-space:nowrap;}
 .top-stat span{color:var(--primary);font-weight:bold;}
-.top-btn{background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:var(--primary);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:.7rem;font-weight:bold;white-space:nowrap;}
+.top-btn{background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:var(--primary);padding:clamp(2px,0.4vh,6px) clamp(6px,1vw,10px);border-radius:6px;cursor:pointer;font-family:monospace;font-size:clamp(0.6rem,0.8vw,0.8rem);font-weight:bold;white-space:nowrap;}
 .top-btn:hover{background:rgba(0,255,136,0.3);}
 #topBar .spacer{flex:1;}
-#middle{display:flex;flex:1;overflow:hidden;gap:6px;padding:6px;}
+
+#middle{display:flex;flex:1;overflow:hidden;gap:clamp(3px,0.5vw,8px);padding:clamp(3px,0.5vw,8px);}
 #canvasWrap{flex:1;position:relative;border:2px solid var(--primary);border-radius:10px;overflow:hidden;background:#000;cursor:crosshair;}
 #gameCanvas{width:100%;height:100%;display:block;}
-#minimap{position:absolute;bottom:8px;right:8px;width:130px;height:100px;border:1px solid rgba(0,255,136,0.5);border-radius:4px;background:rgba(5,8,20,0.85);cursor:pointer;}
-#zoomCtrl{position:absolute;bottom:8px;left:8px;display:flex;flex-direction:column;gap:4px;}
-.zoom-btn{width:32px;height:32px;background:rgba(0,0,0,0.7);border:1px solid rgba(0,255,136,0.5);color:var(--primary);border-radius:6px;cursor:pointer;font-size:1.2rem;}
-#zoomLabel{color:var(--primary);font-size:.6rem;text-align:center;background:rgba(0,0,0,0.6);padding:1px 4px;}
-#spawnBar{width:72px;flex-shrink:0;display:flex;flex-direction:column;gap:5px;overflow-y:auto;background:var(--panel);border:2px solid var(--primary);border-radius:10px;padding:5px;}
-.spawn-btn{width:60px;height:60px;background:rgba(0,255,136,0.12);border:2px solid rgba(0,255,136,0.35);border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.5rem;color:#ccc;font-family:monospace;transition:all .15s;position:relative;flex-shrink:0;}
+
+#rightPanel{display:flex;flex-direction:column;gap:clamp(3px,0.5vw,8px);width:clamp(120px,15vw,250px);overflow:hidden;}
+#rightPanel .panel{background:var(--panel);border:2px solid var(--primary);padding:clamp(6px,0.8vh,12px);border-radius:8px;overflow-y:auto;flex:1;}
+.panel-title{font-family:'Righteous',sans-serif;font-size:clamp(0.65rem,0.85vw,0.85rem);color:var(--primary);margin-bottom:clamp(4px,0.5vh,8px);text-transform:uppercase;font-weight:bold;}
+.stat-item{display:flex;justify-content:space-between;font-size:clamp(0.6rem,0.8vw,0.75rem);margin:clamp(2px,0.3vh,4px) 0;padding:clamp(2px,0.3vh,4px) 0;}
+.opponent-item{background:rgba(0,255,136,0.08);border-left:2px solid var(--primary);padding:clamp(4px,0.5vh,8px);margin-bottom:clamp(3px,0.4vh,6px);border-radius:4px;font-size:clamp(0.6rem,0.8vw,0.75rem);}
+.opponent-item .name{color:var(--primary);font-weight:bold;}
+.opponent-item .stat{color:#aaa;font-size:clamp(0.55rem,0.75vw,0.65rem);}
+
+#spawnBar{width:clamp(60px,8vw,90px);flex-shrink:0;display:flex;flex-direction:column;gap:clamp(3px,0.5vw,6px);overflow-y:auto;background:var(--panel);border:2px solid var(--primary);border-radius:10px;padding:clamp(3px,0.5vh,6px);}
+.spawn-btn{width:100%;aspect-ratio:1;background:rgba(0,255,136,0.12);border:2px solid rgba(0,255,136,0.35);border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:clamp(0.45rem,0.65vw,0.55rem);color:#ccc;font-family:monospace;transition:all .15s;flex-shrink:0;}
 .spawn-btn:hover{background:rgba(0,255,136,0.25);border-color:var(--primary);}
-.spawn-btn .icon{font-size:1.4rem;}
-.spawn-btn .name{font-size:.45rem;color:var(--primary);font-weight:bold;}
-.spawn-btn .cost{font-size:.4rem;color:#aaa;}
+.spawn-btn .icon{font-size:clamp(1.2rem,2vw,1.8rem);}
+.spawn-btn .name{color:var(--primary);font-weight:bold;}
+.spawn-btn .cost{color:#aaa;}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #garageContent { flex-direction:column; }
+  #garageLeft { border-right:none; border-bottom:2px solid var(--primary); }
+  #garageRight { max-height:50vh; }
+  #middle { flex-direction:column; }
+  #rightPanel { width:100%;height:clamp(150px,30vh,300px); flex-direction:row; }
+  #rightPanel .panel { flex:1; }
+  #spawnBar { width:100%;height:auto;flex-direction:row;overflow-x:auto; }
+  .spawn-btn { width:clamp(50px,15vw,80px); }
+}
+
+@media (max-width: 480px) {
+  .login-container { width:95%; }
+  #topBar { font-size:70%; }
+  .top-stat { padding:2px 4px; }
+  .units-grid { grid-template-columns:repeat(2,1fr); }
+}
 
 .game-over{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);z-index:999;}
-.game-over-card{background:#151b3a;border:3px solid var(--primary);padding:2rem;border-radius:16px;text-align:center;max-width:380px;}
-.game-over-title{font-family:'Righteous',sans-serif;font-size:1.8rem;margin-bottom:1rem;color:var(--primary);}
+.game-over-card{background:#151b3a;border:3px solid var(--primary);padding:clamp(1.5rem,3vh,2rem);border-radius:16px;text-align:center;max-width:380px;}
+.game-over-title{font-family:'Righteous',sans-serif;font-size:clamp(1.5rem,2.5vw,1.8rem);margin-bottom:1rem;color:var(--primary);}
 </style>
 </head>
 <body>
@@ -84,7 +110,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
   <div class="login-container">
-    <div class="login-title">⚔️ WAR ZONE V3.1</div>
+    <div class="login-title">⚔️ WAR ZONE V3.2</div>
     <input type="text" id="serverUrl" class="login-input" placeholder="Server URL" value="">
     <button class="login-btn" onclick="connectServer()">🔗 CONNECT</button>
     <input type="text" id="playerName" class="login-input" placeholder="Numele tău" value="Alpha" disabled>
@@ -94,31 +120,27 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
 
 <!-- GARAGE/LOBBY SCREEN -->
 <div id="garageScreen" class="screen">
-  <div style="display:flex;align-items:center;padding:10px;background:var(--panel);border-bottom:2px solid var(--primary);">
-    <div style="flex:1;font-family:'Righteous',sans-serif;color:var(--primary);font-size:1.2rem;">🏗️ GARAJUL TĂU</div>
+  <div style="display:flex;align-items:center;padding:clamp(8px,1vh,12px);background:var(--panel);border-bottom:2px solid var(--primary);flex-wrap:wrap;gap:10px;">
+    <div style="flex:1;font-family:'Righteous',sans-serif;color:var(--primary);font-size:clamp(1rem,1.5vw,1.2rem);">🏗️ GARAJUL TĂU</div>
     <button class="top-btn" onclick="backToLogin()" style="background:rgba(255,0,85,0.2);color:#ff0055;">← BACK</button>
   </div>
   <div id="garageContent">
     <div id="garageLeft">
       <div class="garage-title">👤 PROFIL</div>
       <div class="player-info">
-        <p>Jucător: <span id="garagePlayerName">-</span></p>
-        <p>Team: <span id="garageTeam">-</span></p>
-        <p>💰 <span id="garageGold">0</span>G</p>
-        <p>⚡ <span id="garageEnergy">0</span>E</p>
+        <p>Nume: <span id="garageName">-</span></p>
+        <p>Gold: <span id="garageGold">500</span></p>
+        <p>Energy: <span id="garageEnergy">100</span></p>
       </div>
-
-      <div class="garage-title">🪖 UNITĂȚILOR</div>
-      <div class="units-grid" id="garageUnits"></div>
-
-      <div class="garage-buttons">
-        <button class="garage-btn btn-start" onclick="startWar()">⚔️ START WAR</button>
-      </div>
-    </div>
-
-    <div id="garageRight">
-      <div class="garage-title">⚔️ ALEGE ADVERSAR</div>
+      <div class="garage-title">⚔️ ADVERSARI</div>
       <div class="opponents-list" id="opponentsList"></div>
+    </div>
+    <div id="garageRight">
+      <div class="garage-title">🎖️ UNITĂȚI</div>
+      <div class="units-grid" id="unitsGrid"></div>
+      <div class="garage-buttons">
+        <button class="garage-btn btn-start" onclick="startWar()">START BATTLE</button>
+      </div>
     </div>
   </div>
 </div>
@@ -126,189 +148,156 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
 <!-- GAME SCREEN -->
 <div id="gameScreen" class="screen">
   <div id="topBar">
-    <div class="top-stat">👤 <span id="playerNameDisplay">-</span></div>
-    <div class="top-stat">🪖 <span id="unitsCount">0</span></div>
-    <div class="top-stat">💀 <span id="killsCount">0</span></div>
-    <div class="top-stat">💰 <span id="goldDisplay">0</span>G</div>
-    <div class="top-stat">⚡ <span id="energyDisplay">0</span>E</div>
+    <span class="top-stat">👤 <span id="playerNameDisplay">-</span></span>
+    <span class="top-stat">⚔️ <span id="killsCount">0</span></span>
+    <span class="top-stat">🪖 <span id="unitsCount">0</span></span>
+    <span class="top-stat">💰 <span id="goldDisplay">500</span></span>
+    <span class="top-stat">⚡ <span id="energyDisplay">100</span></span>
     <div class="spacer"></div>
     <button class="top-btn" onclick="backToGarage()">← GARAJ</button>
   </div>
   <div id="middle">
     <div id="canvasWrap">
       <canvas id="gameCanvas"></canvas>
-      <div id="zoomCtrl">
-        <button class="zoom-btn" onclick="changeZoom(0.2)">＋</button>
-        <div id="zoomLabel">100%</div>
-        <button class="zoom-btn" onclick="changeZoom(-0.2)">－</button>
-      </div>
-      <canvas id="minimap"></canvas>
     </div>
-    <div id="spawnBar"></div>
+    <div id="rightPanel">
+      <div class="panel">
+        <div class="panel-title">👥 PLAYERS</div>
+        <div id="playersPanel"></div>
+      </div>
+      <div id="spawnBar"></div>
+    </div>
   </div>
 </div>
 
 <script>
 const UNIT_DEFS = {
-  soldier:    { icon:'👤', name:'SOLDIER',    hp:30,  dmg:10, gold:30,  energy:20  },
-  tank:       { icon:'🛡️', name:'TANK',       hp:120, dmg:22, gold:100, energy:50  },
-  fighter:    { icon:'✈️', name:'FIGHTER',    hp:50,  dmg:35, gold:150, energy:80  },
-  cannon:     { icon:'🔫', name:'CANNON',     hp:40,  dmg:50, gold:200, energy:100 },
-  helicopter: { icon:'🚁', name:'HELI',       hp:60,  dmg:40, gold:250, energy:120 },
-  bomber:     { icon:'💣', name:'BOMBER',     hp:70,  dmg:65, gold:300, energy:150 },
-  collector:  { icon:'📦', name:'COLLECTOR',  hp:25,  dmg:0,  gold:20,  energy:10  },
-  constructor:{ icon:'🏗️', name:'CONSTRUCTOR',hp:35, dmg:5,  gold:80,  energy:60  },
-  turret:     { icon:'🔫', name:'TURRET',     hp:80,  dmg:45, gold:150, energy:100 },
-  barracks:   { icon:'🏛️', name:'BARRACKS',   hp:100, dmg:0,  gold:200, energy:150 }
+  soldier:    { icon:'👤', name:'Soldier', gold:30,  energy:20  },
+  tank:       { icon:'🛡️',  name:'Tank',    gold:100, energy:50  },
+  fighter:    { icon:'✈️',  name:'Fighter', gold:150, energy:80  },
+  cannon:     { icon:'🔫', name:'Cannon',  gold:200, energy:100 },
+  helicopter: { icon:'🚁', name:'Heli',    gold:250, energy:120 },
+  bomber:     { icon:'💣', name:'Bomber',  gold:300, energy:150 },
+  collector:  { icon:'📦', name:'Collect', gold:20,  energy:10  }
 };
 const UNIT_KEYS = Object.keys(UNIT_DEFS);
-
-const state = {
-  connected: false,
-  myPlayerId: null,
-  myPlayer: null,
-  players: [],
-  units: [],
-  bases: [],
-  resourceNodes: [],
-  projectiles: [],
-  obstacles: [],
-  gameStatus: 'waiting',
-  selectedUnits: new Set(),
-  mapWidth: 1000,
-  mapHeight: 800,
-  selectedOpponent: null,
-  unitCounts: {}
+const TEAM_COLORS = {
+  blue: '#0088ff', red: '#ff2200', green: '#00ff00',
+  yellow: '#ffff00', purple: '#ff00ff', orange: '#ff8800'
 };
 
-let ws = null;
-let gameOverShown = false;
-let selectedEnemyId = null;
+const state = {
+  connected: false, gameStarted: false, myPlayerId: null, myPlayer: null,
+  players: [], units: [], bases: [], resourceNodes: [], gameStatus: 'waiting',
+  selectedUnits: new Set(), mapWidth: 1000, mapHeight: 800
+};
 
+let ws = null, selectedEnemyId = null, gameOverShown = false;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const miniCvs = document.getElementById('minimap');
-const miniCtx = miniCvs.getContext('2d');
-miniCvs.width = 130;
-miniCvs.height = 100;
 
-let camX = 0, camY = 0, zoom = 1.0;
-const GAME_W = 1000, GAME_H = 800;
-
+// ===== FIX #2: Responsive canvas resize =====
 function resizeCanvas() {
-  const r = canvas.parentElement.getBoundingClientRect();
-  canvas.width = r.width;
-  canvas.height = r.height;
-  clampCamera();
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
 }
-new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+const resizeObserver = new ResizeObserver(resizeCanvas);
+resizeObserver.observe(canvas.parentElement);
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-function changeZoom(delta) {
-  zoom = Math.max(0.4, Math.min(3.0, zoom + delta));
-  document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
-  clampCamera();
-}
-
-function clampCamera() {
-  const vw = canvas.width / zoom;
-  const vh = canvas.height / zoom;
-  camX = Math.max(0, Math.min(GAME_W - vw, camX));
-  camY = Math.max(0, Math.min(GAME_H - vh, camY));
-}
-
-function gToC(gx, gy) { return { x: (gx - camX) * zoom, y: (gy - camY) * zoom }; }
-function cToG(cx, cy) { return { x: cx / zoom + camX, y: cy / zoom + camY }; }
-
-function switchScreen(screenId) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(screenId).classList.add('active');
-}
-
 function connectServer() {
-  const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  const url = document.getElementById('serverUrl').value || `${protocol}://${location.host}`;
+  const protocol = location.protocol === "https:" ? "wss" : "ws";
+  const input = document.getElementById('serverUrl').value.trim();
+  const url = input || `${protocol}://${location.host}`;
+  if (!url) return;
+
   ws = new WebSocket(url);
   ws.onopen = () => {
     state.connected = true;
-    document.getElementById('playerName').disabled = false;
-    document.getElementById('loginBtn').disabled = false;
-    document.getElementById('loginBtn').style.display = 'block';
+    updateLoginUI();
   };
-  ws.onclose = () => { state.connected = false; };
-  ws.onerror = () => { state.connected = false; };
-  ws.onmessage = (ev) => {
+  ws.onmessage = (event) => {
     try {
-      const msg = JSON.parse(ev.data);
-      if (msg.type === 'PLAYERS_LIST') {
-        updatePlayersList(msg.players || []);
-      } else if (msg.type === 'GAME_STATE') {
-        updateGameState(msg);
-      } else if (msg.type === 'JOIN_CONFIRMED') {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'JOIN_CONFIRMED') {
         state.myPlayerId = msg.playerId;
         state.myPlayer = {
-          id: msg.playerId,
-          name: document.getElementById('playerName').value,
-          team: msg.team,
-          kills: 0,
-          gold: 500,
-          energy: 100,
-          baseX: msg.baseX,
-          baseY: msg.baseY
+          id: msg.playerId, name: document.getElementById('playerName').value,
+          team: msg.team, kills: 0, gold: 500, energy: 100
         };
-        switchScreen('gameScreen');
-        startGameLoop();
+        startGame();
+      } else if (msg.type === 'GAME_STATE') {
+        updateGameState(msg);
       }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error('Parse error:', e); }
   };
+  ws.onerror = () => { state.connected = false; updateLoginUI(); };
+  ws.onclose = () => { state.connected = false; updateLoginUI(); };
+}
+
+function updateLoginUI() {
+  const btn = document.getElementById('loginBtn');
+  const input = document.getElementById('playerName');
+  if (state.connected) {
+    btn.style.display = 'block';
+    btn.disabled = false;
+    input.disabled = false;
+  } else {
+    btn.style.display = 'none';
+    input.disabled = true;
+  }
 }
 
 function goToGarage() {
-  const name = document.getElementById('playerName').value;
-  if (!name.trim() || !state.connected) return;
-  
-  switchScreen('garageScreen');
-  
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'GET_PLAYERS' }));
-  }
-  
-  buildGarage();
+  if (!state.connected) return;
   updateGarageUI();
+  switchScreen('garageScreen');
 }
 
-function buildGarage() {
-  const garageUnits = document.getElementById('garageUnits');
-  garageUnits.innerHTML = UNIT_KEYS.map(type => {
-    const d = UNIT_DEFS[type];
-    return `
-      <div class="unit-card" onclick="selectUnit('${type}')">
-        <div class="icon">${d.icon}</div>
-        <div class="name">${d.name}</div>
-        <div class="cost">${d.gold}G</div>
-        <div class="count" id="count_${type}">0</div>
-      </div>
-    `;
-  }).join('');
-}
-
+// ===== FIX #1: Update players list in garage =====
 function updateGarageUI() {
-  if (!state.myPlayer) return;
-  document.getElementById('garagePlayerName').textContent = state.myPlayer.name;
-  document.getElementById('garageTeam').textContent = state.myPlayer.team.toUpperCase();
-  document.getElementById('garageGold').textContent = Math.round(state.myPlayer.gold);
-  document.getElementById('garageEnergy').textContent = Math.round(state.myPlayer.energy);
+  document.getElementById('garageName').textContent = state.myPlayer?.name || '-';
+  document.getElementById('garageGold').textContent = Math.round(state.myPlayer?.gold || 0);
+  document.getElementById('garageEnergy').textContent = Math.round(state.myPlayer?.energy || 0);
+  
+  // Build units grid
+  const grid = document.getElementById('unitsGrid');
+  grid.innerHTML = UNIT_KEYS.map(type => {
+    const d = UNIT_DEFS[type];
+    return `<div class="unit-card" onclick="selectUnit('${type}')"><div class="icon">${d.icon}</div><div class="name">${d.name}</div><div class="cost">${d.gold}G</div></div>`;
+  }).join('');
+
+  // Update opponents list
+  updatePlayersList();
 }
 
-function updatePlayersList(players) {
+// ===== FIX #1: Update players display =====
+function updatePlayersList() {
   const list = document.getElementById('opponentsList');
-  list.innerHTML = players.filter(p => p.id !== state.myPlayerId).map(p => `
-    <div class="opponent ${selectedEnemyId === p.id ? 'selected' : ''}" onclick="selectOpponent('${p.id}', this)">
-      <div class="opponent-name">${p.name}</div>
-      <div class="opponent-stats">Team: ${p.team.toUpperCase()} | Kills: ${p.kills}</div>
-    </div>
-  `).join('');
+  list.innerHTML = state.players
+    .filter(p => p.id !== state.myPlayerId && p.isAlive)
+    .map(p => `
+      <div class="opponent ${selectedEnemyId === p.id ? 'selected' : ''}" onclick="selectOpponent('${p.id}', this)">
+        <div class="opponent-name">${p.name}</div>
+        <div class="opponent-stats">Team: ${p.team.toUpperCase()} | Kills: ${p.kills}</div>
+      </div>
+    `).join('');
+}
+
+// ===== FIX #1: Update players panel in game screen =====
+function updatePlayersPanel() {
+  const panel = document.getElementById('playersPanel');
+  panel.innerHTML = state.players
+    .filter(p => p.isAlive)
+    .map(p => `
+      <div class="opponent-item">
+        <div class="name">${p.name}</div>
+        <div class="stat">Team: ${p.team.toUpperCase()}</div>
+        <div class="stat">Kills: ${p.kills}</div>
+      </div>
+    `).join('');
 }
 
 function selectOpponent(playerId, el) {
@@ -328,22 +317,17 @@ function startWar() {
   }
   const name = document.getElementById('playerName').value;
   if (!name.trim() || !ws || ws.readyState !== WebSocket.OPEN) return;
-  
   ws.send(JSON.stringify({ type: 'JOIN_GAME', playerName: name }));
-}
-
-function backToLogin() {
-  switchScreen('loginScreen');
-  if (ws) ws.close();
-  ws = null;
-  state.connected = false;
 }
 
 function backToGarage() {
   switchScreen('garageScreen');
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'GET_PLAYERS' }));
-  }
+  updateGarageUI();
+}
+
+function switchScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
 }
 
 function updateGameState(msg) {
@@ -351,8 +335,6 @@ function updateGameState(msg) {
   state.units = msg.units || [];
   state.bases = msg.bases || [];
   state.resourceNodes = msg.resourceNodes || [];
-  state.projectiles = msg.projectiles || [];
-  state.obstacles = msg.obstacles || [];
   state.gameStatus = msg.gameStatus || 'waiting';
   state.mapWidth = msg.mapWidth || 1000;
   state.mapHeight = msg.mapHeight || 800;
@@ -364,6 +346,15 @@ function updateGameState(msg) {
   updateGameUI();
 }
 
+function startGame() {
+  gameOverShown = false;
+  switchScreen('gameScreen');
+  state.gameStarted = true;
+  buildSpawnBar();
+  requestGameState();
+  gameLoop();
+}
+
 function updateGameUI() {
   if (!state.myPlayer) return;
   document.getElementById('playerNameDisplay').textContent = state.myPlayer.name;
@@ -371,6 +362,15 @@ function updateGameUI() {
   document.getElementById('killsCount').textContent = state.myPlayer.kills;
   document.getElementById('goldDisplay').textContent = Math.round(state.myPlayer.gold);
   document.getElementById('energyDisplay').textContent = Math.round(state.myPlayer.energy);
+  
+  // ===== FIX #1: Update players panel =====
+  updatePlayersPanel();
+}
+
+function requestGameState() {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'GET_STATE' }));
+  }
 }
 
 function buildSpawnBar() {
@@ -392,105 +392,142 @@ function spawnUnit(type) {
   ws.send(JSON.stringify({ type: 'SPAWN_UNIT', unitType: type }));
 }
 
-const TEAM_COLORS = {
-  blue: '#0088ff', red: '#ff2200', green: '#00ff00',
-  yellow: '#ffff00', purple: '#ff00ff', orange: '#ff8800'
-};
+// Canvas controls
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const canvasX = (e.clientX - rect.left) / rect.width * state.mapWidth;
+  const canvasY = (e.clientY - rect.top) / rect.height * state.mapHeight;
+  selectUnitAtPosition(canvasX, canvasY, e.ctrlKey || e.shiftKey);
+});
 
-function drawGame() {
-  const W = canvas.width, H = canvas.height;
-  if (!W || !H) return;
+canvas.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (state.selectedUnits.size === 0) return;
+  const rect = canvas.getBoundingClientRect();
+  const targetX = (e.clientX - rect.left) / rect.width * state.mapWidth;
+  const targetY = (e.clientY - rect.top) / rect.height * state.mapHeight;
+  moveSelectedUnits(targetX, targetY);
+});
 
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = '#000e1e';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.strokeStyle = 'rgba(0,255,136,0.03)';
-  const gridSz = 40 * zoom;
-  const offX = ((-camX * zoom) % gridSz + gridSz) % gridSz;
-  const offY = ((-camY * zoom) % gridSz + gridSz) % gridSz;
-  for (let x = offX - gridSz; x < W + gridSz; x += gridSz) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-  }
-  for (let y = offY - gridSz; y < H + gridSz; y += gridSz) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-  }
-
-  state.obstacles.forEach(obs => {
-    const { x, y } = gToC(obs.x, obs.y);
-    ctx.fillStyle = obs.type === 'rock' ? 'rgba(100,100,100,0.6)' : 'rgba(34,139,34,0.4)';
-    ctx.beginPath(); ctx.arc(x, y, obs.radius * zoom, 0, Math.PI * 2); ctx.fill();
-  });
-
-  state.resourceNodes.forEach(node => {
-    const { x, y } = gToC(node.x, node.y);
-    ctx.fillStyle = 'rgba(255,200,0,0.5)';
-    ctx.beginPath(); ctx.arc(x, y, 11 * zoom, 0, Math.PI * 2); ctx.fill();
-  });
-
-  state.bases.forEach(base => {
-    const { x, y } = gToC(base.x, base.y);
-    const color = TEAM_COLORS[base.team] || '#fff';
-    const sz = 22 * zoom;
-    ctx.fillStyle = color + '44'; ctx.fillRect(x - sz, y - sz, sz * 2, sz * 2);
-    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.strokeRect(x - sz, y - sz, sz * 2, sz * 2);
-  });
-
-  state.units.forEach(u => {
-    const { x, y } = gToC(u.x, u.y);
-    const color = TEAM_COLORS[u.team] || '#fff';
-    const sz = 5 * zoom;
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2); ctx.fill();
-    if (state.selectedUnits.has(u.id)) {
-      ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x, y, sz * 1.5, 0, Math.PI * 2); ctx.stroke();
+function selectUnitAtPosition(canvasX, canvasY, multiSelect) {
+  let clicked = null;
+  for (const unit of state.units) {
+    if (unit.playerId === state.myPlayerId) {
+      const dist = Math.hypot(unit.x - canvasX, unit.y - canvasY);
+      if (dist < 15) {
+        clicked = unit;
+        break;
+      }
     }
-  });
+  }
 
-  state.projectiles.forEach(proj => {
-    const { x, y } = gToC(proj.x, proj.y);
-    const color = TEAM_COLORS[proj.team] || '#fff';
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.arc(x, y, 2 * zoom, 0, Math.PI * 2); ctx.fill();
-  });
-
-  drawMinimap();
+  if (clicked) {
+    if (state.selectedUnits.has(clicked.id)) {
+      state.selectedUnits.delete(clicked.id);
+    } else {
+      if (!multiSelect) state.selectedUnits.clear();
+      state.selectedUnits.add(clicked.id);
+    }
+  } else if (!multiSelect) {
+    state.selectedUnits.clear();
+  }
 }
 
-function drawMinimap() {
-  const mw = miniCvs.width, mh = miniCvs.height;
-  miniCtx.fillStyle = 'rgba(5,8,22,0.92)';
-  miniCtx.fillRect(0, 0, mw, mh);
-  const sx = mw / GAME_W, sy = mh / GAME_H;
-  
-  state.bases.forEach(b => {
-    miniCtx.fillStyle = TEAM_COLORS[b.team] || '#fff';
-    miniCtx.fillRect(b.x * sx - 4, b.y * sy - 4, 8, 8);
+function moveSelectedUnits(targetX, targetY) {
+  for (const unitId of state.selectedUnits) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'MOVE_UNIT', unitId, x: targetX, y: targetY }));
+    }
+  }
+}
+
+function drawGame() {
+  const w = canvas.width;
+  const h = canvas.height;
+  if (w === 0 || h === 0) return;
+
+  ctx.fillStyle = '#0a0e27';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = 'rgba(0,255,136,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < w; i += 40) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i, h);
+    ctx.stroke();
+  }
+  for (let i = 0; i < h; i += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, i);
+    ctx.lineTo(w, i);
+    ctx.stroke();
+  }
+
+  const scaleX = w / state.mapWidth;
+  const scaleY = h / state.mapHeight;
+
+  state.bases.forEach(base => {
+    const x = base.x * scaleX;
+    const y = base.y * scaleY;
+    const color = TEAM_COLORS[base.team] || '#fff';
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 20, y - 20, 40, 40);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - 20, y - 20, 40, 40);
+
+    const hPercent = Math.max(0, base.health / base.maxHealth);
+    ctx.fillStyle = hPercent > 0.5 ? '#00ff88' : hPercent > 0.25 ? '#ffaa00' : '#ff2200';
+    ctx.fillRect(x - 25, y - 30, 50 * hPercent, 3);
   });
-  
-  state.units.forEach(u => {
-    miniCtx.fillStyle = TEAM_COLORS[u.team] || '#fff';
-    miniCtx.fillRect(u.x * sx - 1, u.y * sy - 1, 2, 2);
+
+  state.units.forEach(unit => {
+    const x = unit.x * scaleX;
+    const y = unit.y * scaleY;
+    const color = TEAM_COLORS[unit.team] || '#fff';
+    const size = 6 * Math.min(scaleX, scaleY);
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (unit.range > 0) {
+      ctx.strokeStyle = color + '30';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, unit.range * Math.min(scaleX, scaleY), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    if (state.selectedUnits.has(unit.id)) {
+      ctx.strokeStyle = '#ffff00';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, size + 4, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    const hPercent = unit.health / unit.maxHealth;
+    ctx.fillStyle = hPercent > 0.5 ? '#00ff88' : '#ff8800';
+    ctx.fillRect(x - size, y - size - 5, size * 2 * hPercent, 2);
   });
 }
 
 function gameLoop() {
   drawGame();
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'GET_STATE' }));
-  }
   requestAnimationFrame(gameLoop);
 }
 
-function startGameLoop() {
-  buildSpawnBar();
-  gameLoop();
-}
+setInterval(() => {
+  if (state.gameStarted && state.connected) {
+    requestGameState();
+  }
+}, 100);
 
-// Initialize
-document.getElementById('loginBtn').disabled = true;
-document.getElementById('loginBtn').style.display = 'none';
+switchScreen('loginScreen');
 </script>
 </body>
 </html>
