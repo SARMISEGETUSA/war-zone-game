@@ -4,13 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>WAR ZONE V3.2</title>
+<title>WAR ZONE V3.3</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Righteous&family=Inconsolata:wght@400;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
 :root{--primary:#00ff88;--secondary:#ff0055;--bg:#0a0e27;--panel:rgba(21,27,58,0.95);--scale:1;}
 
-/* ===== FIX #2: RESPONSIVE SCALING ===== */
 html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'Inconsolata',monospace;overflow:hidden;font-size:clamp(10px, 1vw, 18px);}
 
 .screen{display:none;width:100%;height:100%;position:absolute;top:0;left:0;}
@@ -81,7 +80,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
 .spawn-btn .name{color:var(--primary);font-weight:bold;}
 .spawn-btn .cost{color:#aaa;}
 
-/* Responsive adjustments */
+#debug{position:fixed;bottom:5px;right:5px;background:rgba(0,0,0,0.8);border:1px solid var(--primary);padding:5px;font-size:0.6rem;color:var(--primary);max-width:200px;max-height:100px;overflow-y:auto;border-radius:4px;}
+
 @media (max-width: 768px) {
   #garageContent { flex-direction:column; }
   #garageLeft { border-right:none; border-bottom:2px solid var(--primary); }
@@ -110,7 +110,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
   <div class="login-container">
-    <div class="login-title">⚔️ WAR ZONE V3.2</div>
+    <div class="login-title">⚔️ WAR ZONE V3.3</div>
     <input type="text" id="serverUrl" class="login-input" placeholder="Server URL" value="">
     <button class="login-btn" onclick="connectServer()">🔗 CONNECT</button>
     <input type="text" id="playerName" class="login-input" placeholder="Numele tău" value="Alpha" disabled>
@@ -136,7 +136,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
       <div class="opponents-list" id="opponentsList"></div>
     </div>
     <div id="garageRight">
-      <div class="garage-title">🎖️ UNITĂȚI</div>
+      <div class="garage-title">🎖️ UNITĂȚI DISPONIBILE</div>
       <div class="units-grid" id="unitsGrid"></div>
       <div class="garage-buttons">
         <button class="garage-btn btn-start" onclick="startWar()">START BATTLE</button>
@@ -170,6 +170,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'In
   </div>
 </div>
 
+<div id="debug"></div>
+
 <script>
 const UNIT_DEFS = {
   soldier:    { icon:'👤', name:'Soldier', gold:30,  energy:20  },
@@ -196,14 +198,23 @@ let ws = null, selectedEnemyId = null, gameOverShown = false;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// ===== FIX #2: Responsive canvas resize =====
+function debug(msg) {
+  console.log(`[V3.3] ${msg}`);
+  const debugEl = document.getElementById('debug');
+  debugEl.innerHTML += `[${new Date().getTime() % 10000}] ${msg}<br>`;
+  if (debugEl.children.length > 20) debugEl.innerHTML = debugEl.innerHTML.split('<br>').slice(-20).join('<br>');
+}
+
+// Canvas resize
 function resizeCanvas() {
   const rect = canvas.parentElement.getBoundingClientRect();
   canvas.width = rect.width;
   canvas.height = rect.height;
 }
 const resizeObserver = new ResizeObserver(resizeCanvas);
-resizeObserver.observe(canvas.parentElement);
+if (canvas.parentElement) {
+  resizeObserver.observe(canvas.parentElement);
+}
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
@@ -213,11 +224,22 @@ function connectServer() {
   const url = input || `${protocol}://${location.host}`;
   if (!url) return;
 
+  debug(`Connecting to: ${url}`);
   ws = new WebSocket(url);
+
   ws.onopen = () => {
     state.connected = true;
+    debug('Connected!');
     updateLoginUI();
+    // ===== FIX: Request players immediately after connect =====
+    setTimeout(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'GET_STATE' }));
+        debug('Requested initial state');
+      }
+    }, 500);
   };
+
   ws.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
@@ -227,14 +249,28 @@ function connectServer() {
           id: msg.playerId, name: document.getElementById('playerName').value,
           team: msg.team, kills: 0, gold: 500, energy: 100
         };
+        debug(`Joined as: ${state.myPlayer.name} (${state.myPlayer.team})`);
         startGame();
       } else if (msg.type === 'GAME_STATE') {
+        debug(`Game state: ${msg.players?.length || 0} players, ${msg.units?.length || 0} units`);
         updateGameState(msg);
       }
-    } catch (e) { console.error('Parse error:', e); }
+    } catch (e) {
+      debug(`Parse error: ${e.message}`);
+    }
   };
-  ws.onerror = () => { state.connected = false; updateLoginUI(); };
-  ws.onclose = () => { state.connected = false; updateLoginUI(); };
+
+  ws.onerror = () => {
+    state.connected = false;
+    debug('Connection error');
+    updateLoginUI();
+  };
+
+  ws.onclose = () => {
+    state.connected = false;
+    debug('Disconnected');
+    updateLoginUI();
+  };
 }
 
 function updateLoginUI() {
@@ -252,62 +288,62 @@ function updateLoginUI() {
 
 function goToGarage() {
   if (!state.connected) return;
+  debug(`Going to garage. Players: ${state.players.length}`);
   updateGarageUI();
   switchScreen('garageScreen');
 }
 
-// ===== FIX #1: Update players list in garage =====
-function updateGarageUI() {
-  document.getElementById('garageName').textContent = state.myPlayer?.name || '-';
-  document.getElementById('garageGold').textContent = Math.round(state.myPlayer?.gold || 0);
-  document.getElementById('garageEnergy').textContent = Math.round(state.myPlayer?.energy || 0);
-  
-  // Build units grid
+// ===== FIX: Build units grid properly =====
+function buildUnitsGrid() {
   const grid = document.getElementById('unitsGrid');
+  if (!grid) return;
   grid.innerHTML = UNIT_KEYS.map(type => {
     const d = UNIT_DEFS[type];
     return `<div class="unit-card" onclick="selectUnit('${type}')"><div class="icon">${d.icon}</div><div class="name">${d.name}</div><div class="cost">${d.gold}G</div></div>`;
   }).join('');
+  debug(`Built units grid with ${UNIT_KEYS.length} units`);
+}
 
-  // Update opponents list
+function updateGarageUI() {
+  debug(`updateGarageUI called. Players available: ${state.players.length}`);
+  
+  document.getElementById('garageName').textContent = state.myPlayer?.name || '-';
+  document.getElementById('garageGold').textContent = Math.round(state.myPlayer?.gold || 0);
+  document.getElementById('garageEnergy').textContent = Math.round(state.myPlayer?.energy || 0);
+  
+  buildUnitsGrid();
   updatePlayersList();
 }
 
-// ===== FIX #1: Update players display =====
+// ===== FIX: Update players list with debug =====
 function updatePlayersList() {
   const list = document.getElementById('opponentsList');
-  list.innerHTML = state.players
-    .filter(p => p.id !== state.myPlayerId && p.isAlive)
-    .map(p => `
-      <div class="opponent ${selectedEnemyId === p.id ? 'selected' : ''}" onclick="selectOpponent('${p.id}', this)">
-        <div class="opponent-name">${p.name}</div>
-        <div class="opponent-stats">Team: ${p.team.toUpperCase()} | Kills: ${p.kills}</div>
-      </div>
-    `).join('');
-}
-
-// ===== FIX #1: Update players panel in game screen =====
-function updatePlayersPanel() {
-  const panel = document.getElementById('playersPanel');
-  panel.innerHTML = state.players
-    .filter(p => p.isAlive)
-    .map(p => `
-      <div class="opponent-item">
-        <div class="name">${p.name}</div>
-        <div class="stat">Team: ${p.team.toUpperCase()}</div>
-        <div class="stat">Kills: ${p.kills}</div>
-      </div>
-    `).join('');
+  if (!list) return;
+  
+  const opponents = state.players.filter(p => p.id !== state.myPlayerId && p.isAlive);
+  debug(`Updating opponents list: ${opponents.length} opponents`);
+  
+  list.innerHTML = opponents.map(p => `
+    <div class="opponent ${selectedEnemyId === p.id ? 'selected' : ''}" onclick="selectOpponent('${p.id}', this)">
+      <div class="opponent-name">${p.name}</div>
+      <div class="opponent-stats">Team: ${p.team.toUpperCase()} | Kills: ${p.kills}</div>
+    </div>
+  `).join('');
+  
+  if (opponents.length === 0) {
+    list.innerHTML = '<div style="color:#888;font-size:0.7rem;padding:10px;">Asteapta alti jucatori...</div>';
+  }
 }
 
 function selectOpponent(playerId, el) {
   document.querySelectorAll('.opponent').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
   selectedEnemyId = playerId;
+  debug(`Selected opponent: ${playerId}`);
 }
 
 function selectUnit(type) {
-  console.log('Selected unit:', type);
+  debug(`Selected unit: ${type}`);
 }
 
 function startWar() {
@@ -317,12 +353,23 @@ function startWar() {
   }
   const name = document.getElementById('playerName').value;
   if (!name.trim() || !ws || ws.readyState !== WebSocket.OPEN) return;
+  
+  debug(`Starting war against ${selectedEnemyId}`);
   ws.send(JSON.stringify({ type: 'JOIN_GAME', playerName: name }));
+}
+
+function backToLogin() {
+  if (ws) ws.close();
+  ws = null;
+  state.connected = false;
+  switchScreen('loginScreen');
+  debug('Went back to login');
 }
 
 function backToGarage() {
   switchScreen('garageScreen');
   updateGarageUI();
+  debug('Went back to garage');
 }
 
 function switchScreen(screenId) {
@@ -353,6 +400,7 @@ function startGame() {
   buildSpawnBar();
   requestGameState();
   gameLoop();
+  debug('Game started');
 }
 
 function updateGameUI() {
@@ -363,8 +411,23 @@ function updateGameUI() {
   document.getElementById('goldDisplay').textContent = Math.round(state.myPlayer.gold);
   document.getElementById('energyDisplay').textContent = Math.round(state.myPlayer.energy);
   
-  // ===== FIX #1: Update players panel =====
   updatePlayersPanel();
+}
+
+function updatePlayersPanel() {
+  const panel = document.getElementById('playersPanel');
+  if (!panel) return;
+  
+  debug(`Updating players panel: ${state.players.length} total players`);
+  panel.innerHTML = state.players
+    .filter(p => p.isAlive)
+    .map(p => `
+      <div class="opponent-item">
+        <div class="name">${p.name}</div>
+        <div class="stat">Team: ${p.team.toUpperCase()}</div>
+        <div class="stat">Kills: ${p.kills}</div>
+      </div>
+    `).join('');
 }
 
 function requestGameState() {
@@ -375,6 +438,7 @@ function requestGameState() {
 
 function buildSpawnBar() {
   const bar = document.getElementById('spawnBar');
+  if (!bar) return;
   bar.innerHTML = UNIT_KEYS.map(type => {
     const d = UNIT_DEFS[type];
     return `
@@ -389,10 +453,10 @@ function buildSpawnBar() {
 
 function spawnUnit(type) {
   if (!ws || ws.readyState !== WebSocket.OPEN || !state.myPlayer) return;
+  debug(`Spawning: ${type}`);
   ws.send(JSON.stringify({ type: 'SPAWN_UNIT', unitType: type }));
 }
 
-// Canvas controls
 canvas.addEventListener('click', (e) => {
   const rect = canvas.getBoundingClientRect();
   const canvasX = (e.clientX - rect.left) / rect.width * state.mapWidth;
@@ -528,6 +592,7 @@ setInterval(() => {
 }, 100);
 
 switchScreen('loginScreen');
+debug('V3.3 Loaded');
 </script>
 </body>
 </html>
