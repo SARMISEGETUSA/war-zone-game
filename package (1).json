@@ -1,0 +1,26 @@
+{
+  "name": "war-zone-game",
+  "version": "3.0.0",
+  "description": "Multiplayer real-time strategy game - WAR ZONE V3.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.13.0",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "keywords": [
+    "game",
+    "multiplayer",
+    "realtime",
+    "strategy"
+  ],
+  "author": "",
+  "license": "MIT"
+}

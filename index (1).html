@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>WAR ZONE V3.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Righteous&family=Inconsolata:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+:root{--primary:#00ff88;--secondary:#ff0055;--bg:#0a0e27;--panel:rgba(21,27,58,0.95);}
+html,body{width:100%;height:100%;background:var(--bg);color:#fff;font-family:'Inconsolata',monospace;overflow:hidden;}
+
+/* ══ LOGIN ══ */
+.login-container{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,14,39,0.97);z-index:1000;}
+.login-box{background:linear-gradient(135deg,#151b3a,#0f1428);border:2px solid var(--primary);padding:2rem;border-radius:20px;max-width:400px;width:90%;}
+.login-title{font-family:'Righteous',sans-serif;font-size:2rem;color:var(--primary);margin-bottom:1rem;}
+.login-input{width:100%;background:rgba(15,20,40,0.8);border:2px solid rgba(0,255,136,0.3);color:#fff;padding:.8rem;margin-bottom:.8rem;font-family:monospace;border-radius:8px;font-size:1rem;}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--primary),#00dd88);color:#000;border:none;padding:.8rem;font-weight:bold;cursor:pointer;border-radius:8px;margin-bottom:.5rem;min-height:44px;font-size:1rem;}
+.status{padding:.6rem;border-radius:8px;margin-bottom:.8rem;text-align:center;font-weight:bold;border:1px solid;font-size:.9rem;}
+.status-connected{background:rgba(0,255,136,0.2);color:var(--primary);border-color:var(--primary);}
+.status-disconnected{background:rgba(255,0,85,0.2);color:var(--secondary);border-color:var(--secondary);}
+
+/* ══ MAIN LAYOUT ══ */
+#gameScreen{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ══ TOP BAR ══ */
+#topBar{
+  display:flex;align-items:center;gap:6px;padding:5px 8px;
+  background:var(--panel);border-bottom:2px solid var(--primary);
+  flex-shrink:0;flex-wrap:wrap;
+}
+.top-stat{font-size:.7rem;padding:3px 8px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:6px;white-space:nowrap;}
+.top-stat span{color:var(--primary);font-weight:bold;}
+.top-btn{background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:var(--primary);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:monospace;font-size:.7rem;font-weight:bold;min-height:30px;white-space:nowrap;}
+.top-btn:hover{background:rgba(0,255,136,0.3);}
+.top-btn.active{background:rgba(0,255,136,0.35);border-color:var(--primary);}
+#topBar .spacer{flex:1;}
+
+/* ══ MIDDLE: canvas + sidebar ══ */
+#middle{display:flex;flex:1;overflow:hidden;gap:6px;padding:6px;}
+
+/* ══ CANVAS ══ */
+#canvasWrap{flex:1;position:relative;border:2px solid var(--primary);border-radius:10px;overflow:hidden;background:var(--bg);cursor:crosshair;touch-action:manipulation;min-width:0;}
+#gameCanvas{width:100%;height:100%;display:block;}
+
+/* Minimap */
+#minimap{position:absolute;bottom:8px;right:8px;width:130px;height:100px;border:1px solid rgba(0,255,136,0.5);border-radius:4px;background:rgba(5,8,20,0.85);cursor:pointer;}
+
+/* Zoom controls */
+#zoomCtrl{position:absolute;bottom:8px;left:8px;display:flex;flex-direction:column;gap:4px;}
+.zoom-btn{width:32px;height:32px;background:rgba(0,0,0,0.7);border:1px solid rgba(0,255,136,0.5);color:var(--primary);border-radius:6px;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;}
+.zoom-btn:hover{background:rgba(0,255,136,0.2);}
+#zoomLabel{color:var(--primary);font-size:.6rem;text-align:center;background:rgba(0,0,0,0.6);border-radius:4px;padding:1px 4px;}
+
+/* ══ SPAWN SIDEBAR ══ */
+#spawnBar{
+  width:72px;flex-shrink:0;display:flex;flex-direction:column;gap:5px;overflow-y:auto;
+  background:var(--panel);border:2px solid var(--primary);border-radius:10px;padding:5px;
+}
+#spawnBar::-webkit-scrollbar{width:3px;}
+#spawnBar::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.3);}
+
+.spawn-btn{
+  width:60px;height:60px;background:rgba(0,255,136,0.12);border:2px solid rgba(0,255,136,0.35);
+  border-radius:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;font-size:.5rem;color:#ccc;font-family:monospace;
+  transition:all .15s;position:relative;flex-shrink:0;
+}
+.spawn-btn:hover{background:rgba(0,255,136,0.25);border-color:var(--primary);color:#fff;}
+.spawn-btn.disabled-btn{opacity:.35;cursor:not-allowed;border-color:rgba(255,0,85,0.4);}
+.spawn-btn .s-icon{font-size:1.4rem;line-height:1;}
+.spawn-btn .s-name{font-size:.45rem;text-transform:uppercase;font-weight:bold;color:var(--primary);}
+.spawn-btn .s-cost{font-size:.4rem;color:#aaa;}
+/* collector count badge */
+.spawn-btn .badge{position:absolute;top:2px;right:2px;background:rgba(0,255,136,0.8);color:#000;font-size:.45rem;border-radius:3px;padding:0 3px;font-weight:bold;}
+
+/* ══ FLOATING UNIT INFO PANEL ══ */
+#unitInfo{
+  position:fixed;z-index:500;background:var(--panel);border:2px solid var(--primary);
+  border-radius:10px;padding:10px 14px;min-width:180px;max-width:220px;
+  display:none;pointer-events:none;
+  box-shadow:0 0 20px rgba(0,255,136,0.3);
+}
+#unitInfo h3{font-family:'Righteous',sans-serif;color:var(--primary);font-size:.9rem;margin-bottom:6px;}
+#unitInfo .ui-row{display:flex;justify-content:space-between;font-size:.65rem;margin:2px 0;}
+#unitInfo .ui-row span:last-child{color:var(--primary);}
+#unitInfo .ui-hint{font-size:.55rem;color:#888;margin-top:6px;border-top:1px solid rgba(0,255,136,0.2);padding-top:4px;}
+
+/* ══ OVERLAYS (chat, help, tweak) ══ */
+.overlay-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:800;display:none;align-items:flex-end;justify-content:center;}
+.overlay-backdrop.active{display:flex;}
+
+/* Chat overlay */
+#chatOverlay{width:100%;max-width:560px;background:var(--panel);border:2px solid var(--primary);border-radius:14px 14px 0 0;padding:10px;display:flex;flex-direction:column;gap:7px;max-height:70vh;}
+#chatMessages{flex:1;overflow-y:auto;font-size:.7rem;background:rgba(0,0,0,0.3);padding:.5rem;border-radius:6px;max-height:45vh;}
+.chat-message{margin:.2rem 0;padding:.2rem .4rem;border-left:2px solid;border-radius:2px;}
+.chat-message.blue{border-left-color:#0088ff;} .chat-message.red{border-left-color:#ff2200;} .chat-message.green{border-left-color:#00ff00;}
+.chat-message.yellow{border-left-color:#ffff00;} .chat-message.purple{border-left-color:#ff00ff;} .chat-message.orange{border-left-color:#ff8800;}
+.chat-message.system{border-left-color:var(--primary);color:var(--primary);}
+.chat-input-row{display:flex;gap:6px;}
+.chat-input{flex:1;background:rgba(15,20,40,0.8);border:1px solid rgba(0,255,136,0.35);color:#fff;padding:.5rem;font-family:monospace;font-size:.75rem;border-radius:6px;}
+.chat-send-btn{background:linear-gradient(135deg,var(--primary),#00cc66);color:#000;border:none;padding:.5rem 1rem;cursor:pointer;border-radius:6px;font-weight:bold;font-size:.75rem;}
+#chatUnread{background:var(--secondary);color:#fff;font-size:.55rem;border-radius:10px;padding:1px 5px;min-width:16px;text-align:center;display:none;}
+
+/* Help overlay */
+#helpOverlay{
+  width:100%;max-width:560px;background:var(--panel);border:2px solid var(--primary);
+  border-radius:14px;padding:16px;max-height:85vh;overflow-y:auto;margin:10px;
+}
+#helpOverlay h2{font-family:'Righteous',sans-serif;color:var(--primary);font-size:1.2rem;margin-bottom:12px;text-align:center;}
+.help-section{margin-bottom:12px;}
+.help-section h3{color:var(--primary);font-size:.75rem;border-bottom:1px solid rgba(0,255,136,0.25);padding-bottom:3px;margin-bottom:5px;}
+.help-section p,.help-section li{font-size:.65rem;color:#ccc;line-height:1.6;margin:2px 0;}
+.help-section li::before{content:'▶ ';color:var(--primary);}
+.help-section ul{list-style:none;padding-left:4px;}
+.help-close{width:100%;background:linear-gradient(135deg,var(--primary),#00cc66);color:#000;border:none;padding:.6rem;cursor:pointer;border-radius:8px;font-weight:bold;font-size:.8rem;margin-top:8px;}
+
+/* Leaderboard panel (inside topbar) */
+#lbPanel{font-size:.62rem;display:flex;gap:8px;flex-wrap:wrap;}
+.lb-item{padding:2px 7px;border-radius:4px;border:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.05);}
+
+/* Game over */
+.game-over{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);z-index:999;}
+.game-over-card{background:#151b3a;border:3px solid var(--primary);padding:2rem;border-radius:16px;text-align:center;max-width:380px;width:90%;}
+.game-over-title{font-family:'Righteous',sans-serif;font-size:1.8rem;margin-bottom:1rem;color:var(--primary);}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login" class="login-container">
+  <div class="login-box">
+    <div class="login-title">⚔️ WAR ZONE V3.0</div>
+    <div id="statusDiv" class="status status-disconnected">✗ OFFLINE</div>
+    <input type="text" id="serverUrl" class="login-input" placeholder="Server URL" value="">
+    <button class="login-btn" onclick="connectServer()">CONNECT</button>
+    <input type="text" id="playerName" class="login-input" placeholder="Numele tău" value="Alpha" disabled>
+    <button class="login-btn" id="joinBtn" onclick="joinGame()" style="display:none;" disabled>INTRĂ ÎN JOC</button>
+  </div>
+</div>
+
+<!-- ══ UNIT INFO TOOLTIP ══ -->
+<div id="unitInfo">
+  <h3 id="ui-name">SOLDIER</h3>
+  <div class="ui-row"><span>❤️ HP</span><span id="ui-hp">30</span></div>
+  <div class="ui-row"><span>⚔️ Damage</span><span id="ui-dmg">10</span></div>
+  <div class="ui-row"><span>🎯 Range</span><span id="ui-range">80</span></div>
+  <div class="ui-row"><span>💨 Viteza</span><span id="ui-spd">2</span></div>
+  <div class="ui-row"><span>💰 Cost</span><span id="ui-cost">30G / 20E</span></div>
+  <div class="ui-hint" id="ui-hint">Dublu-click pe buton pentru spawn</div>
+</div>
+
+<!-- ══ CHAT OVERLAY ══ -->
+<div class="overlay-backdrop" id="chatBackdrop" onclick="closeChatIfOutside(event)">
+  <div id="chatOverlay">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-family:'Righteous',sans-serif;color:var(--primary);font-size:.85rem;">💬 CHAT</div>
+      <button onclick="toggleChat()" style="background:none;border:none;color:#888;cursor:pointer;font-size:1rem;">✕</button>
+    </div>
+    <div id="chatMessages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Mesaj sau /help" onkeypress="handleChatKeypress(event)">
+      <button class="chat-send-btn" onclick="sendChatMessage()">SEND</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HELP OVERLAY ══ -->
+<div class="overlay-backdrop" id="helpBackdrop" onclick="closeHelpIfOutside(event)">
+  <div id="helpOverlay">
+    <h2>📖 CUM SE JOACĂ</h2>
+
+    <div class="help-section">
+      <h3>🎯 SCOPUL JOCULUI</h3>
+      <p>Distruge bazele inamicilor! Ultimul jucător cu baza în viață câștigă. Jocul suportă 2–6 jucători.</p>
+    </div>
+
+    <div class="help-section">
+      <h3>🖱️ CONTROL UNITĂȚI</h3>
+      <ul>
+        <li><b>Click</b> pe o unitate → o selectezi</li>
+        <li><b>Ctrl+Click</b> → adaugi la selecție</li>
+        <li><b>Trage</b> pe hartă → selectezi mai multe simultan</li>
+        <li><b>Click pe teren</b> (cu unități selectate) → le trimiți acolo</li>
+        <li>Pe <b>mobil</b>: tap pe unitate → selectezi; tap pe teren → miști</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>🔍 ZOOM</h3>
+      <ul>
+        <li>Butoanele <b>+</b> și <b>−</b> din colțul stânga-jos al hărții</li>
+        <li>Pe PC: <b>Scroll</b> cu mouse-ul pe hartă</li>
+        <li>Pe mobil: <b>Pinch</b> (two-finger zoom)</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>⚙️ SPAWN UNITĂȚI</h3>
+      <ul>
+        <li><b>Un click</b> pe butonul din dreapta → vezi informații despre acea unitate</li>
+        <li><b>Dublu-click</b> pe buton → spawni unitatea (costă Gold + Energy)</li>
+        <li>Unitățile apar în jurul bazei tale</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>💰 RESURSE (Gold & Energy)</h3>
+      <ul>
+        <li>Primești pasiv Gold și Energy în timp</li>
+        <li><b>COLLECTOR</b> adună autonom resurse de pe noduri (🟡) și le aduce la bază</li>
+        <li>Maxim <b>5 Collectors</b> per jucător</li>
+        <li>Nodurile de resurse se regenerează lent</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>🗺️ MINI-HARTĂ</h3>
+      <ul>
+        <li>Colțul dreapta-jos al hărții</li>
+        <li>Punctele colorate = bazele și unitățile echipelor</li>
+        <li>Click pe mini-hartă → navighezi rapid acolo</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>🪖 UNITĂȚI</h3>
+      <ul>
+        <li>👤 <b>Soldier</b> – infanterist ieftin, mediu</li>
+        <li>🛡️ <b>Tank</b> – rezistent, range mic</li>
+        <li>✈️ <b>Fighter</b> – rapid, range bun</li>
+        <li>🔫 <b>Cannon</b> – range enorm, lent</li>
+        <li>🚁 <b>Heli</b> – rapid și range mare</li>
+        <li>💣 <b>Bomber</b> – cel mai puternic, lent</li>
+        <li>📦 <b>Collector</b> – nu atacă, adună resurse</li>
+      </ul>
+    </div>
+
+    <button class="help-close" onclick="toggleHelp()">AM ÎNȚELES ✓</button>
+  </div>
+</div>
+
+<!-- ══ TWEAK OVERLAY ══ -->
+<div class="overlay-backdrop" id="tweakBackdrop" onclick="closeTweakIfOutside(event)">
+  <div id="tweakOverlay">
+    <h2>⚙️ CUSTOMIZEAZĂ UNITĂȚILE</h2>
+    <p style="text-align:center;font-size:.75rem;color:#aaa;margin-bottom:12px;">Modifică parametrii și distrează-te cu prietenii! 🎮</p>
+    
+    <div id="tweakContent">
+      <!-- Units will be generated here -->
+    </div>
+
+    <div class="tweak-buttons" style="margin-top:16px;">
+      <button class="tweak-apply" onclick="applyTweaks()">✅ APLICĂ MODIFICĂRI</button>
+      <button class="tweak-reset" onclick="resetTweaks()">🔄 RESETEAZĂ</button>
+    </div>
+    <button class="tweak-close" onclick="toggleTweak()">ÎNCHIDE</button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div id="gameScreen" style="display:none;">
+
+  <!-- TOP BAR -->
+  <div id="topBar">
+    <div class="top-stat">👤 <span id="playerNameDisplay">-</span></div>
+    <div class="top-stat">🪖 <span id="unitsCount">0</span></div>
+    <div class="top-stat">💀 <span id="killsCount">0</span></div>
+    <div class="top-stat">💰 <span id="goldDisplay">500</span>G</div>
+    <div class="top-stat">⚡ <span id="energyDisplay">100</span>E</div>
+    <div class="spacer"></div>
+    <div id="lbPanel"></div>
+    <div class="spacer"></div>
+    <button class="top-btn" onclick="toggleChat()" id="chatBtn">💬 CHAT <span id="chatUnread"></span></button>
+    <button class="top-btn" onclick="toggleHelp()">❓ AJUTOR</button>
+  </div>
+
+  <!-- MIDDLE -->
+  <div id="middle">
+
+    <!-- CANVAS -->
+    <div id="canvasWrap">
+      <canvas id="gameCanvas"></canvas>
+
+      <!-- Zoom -->
+      <div id="zoomCtrl">
+        <button class="zoom-btn" onclick="changeZoom(0.2)">＋</button>
+        <div id="zoomLabel">100%</div>
+        <button class="zoom-btn" onclick="changeZoom(-0.2)">－</button>
+      </div>
+
+      <!-- Minimap -->
+      <canvas id="minimap"></canvas>
+    </div>
+
+    <!-- SPAWN SIDEBAR -->
+    <div id="spawnBar">
+      <!-- buttons injected by JS -->
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  UNIT DEFINITIONS (for UI)
+// ═══════════════════════════════════════════════════════════════════
+const UNIT_DEFS = {
+  soldier:    { icon:'👤', name:'SOLDIER',   hp:30,  dmg:10, range:80,  spd:2,   gold:30,  energy:20,  hint:'Infanterist ieftin, se descurcă bine în grupuri.' },
+  tank:       { icon:'🛡️', name:'TANK',      hp:100, dmg:25, range:50,  spd:1,   gold:100, energy:50,  hint:'Foarte rezistent. Ideal la prima linie.' },
+  fighter:    { icon:'✈️', name:'FIGHTER',   hp:50,  dmg:35, range:100, spd:3,   gold:150, energy:80,  hint:'Rapid și precis. Ideal pentru harțuieli.' },
+  cannon:     { icon:'🔫', name:'CANNON',    hp:40,  dmg:50, range:160, spd:0.5, gold:200, energy:100, hint:'Range enorm. Ține-l departe de pericol.' },
+  helicopter: { icon:'🚁', name:'HELI',      hp:60,  dmg:40, range:120, spd:4,   gold:250, energy:120, hint:'Cel mai rapid. Grozav pentru raiduri rapide.' },
+  bomber:     { icon:'💣', name:'BOMBER',    hp:80,  dmg:70, range:180, spd:2.5, gold:300, energy:150, hint:'Cel mai distructiv. Costisitor dar merită.' },
+  collector:  { icon:'📦', name:'COLLECTOR', hp:25,  dmg:0,  range:0,   spd:2,   gold:20,  energy:10,  hint:'Adună resurse autonom. Max 5 per jucător.' }
+};
+const UNIT_KEYS = Object.keys(UNIT_DEFS);
+
+// ═══════════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════════
+const state = {
+  connected:false, gameStarted:false,
+  myPlayerId:null, myPlayer:null,
+  players:[], units:[], bases:[],
+  resourceNodes:[], projectiles:[],
+  gameStatus:'waiting',
+  selectedUnits:new Set()
+};
+
+let ws = null, gameOverShown = false;
+let chatUnreadCount = 0, chatOpen = false;
+
+// ═══════════════════════════════════════════════════════════════════
+//  CANVAS & ZOOM
+// ═══════════════════════════════════════════════════════════════════
+const canvas   = document.getElementById('gameCanvas');
+const ctx      = canvas.getContext('2d');
+const miniCvs  = document.getElementById('minimap');
+const miniCtx  = miniCvs.getContext('2d');
+miniCvs.width  = 130; miniCvs.height = 100;
+
+// Camera / zoom
+let camX = 0, camY = 0;          // top-left of viewport in game coords
+let zoom = 1.0;                   // 1 = 1 game pixel = 1 canvas pixel (at base size)
+const GAME_W = 800, GAME_H = 700;
+
+function resizeCanvas() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  canvas.width  = r.width;
+  canvas.height = r.height;
+  clampCamera();
+}
+new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function changeZoom(delta) {
+  zoom = Math.max(0.4, Math.min(3.0, zoom + delta));
+  document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+  clampCamera();
+}
+
+function clampCamera() {
+  const vw = canvas.width  / zoom;
+  const vh = canvas.height / zoom;
+  camX = Math.max(0, Math.min(GAME_W - vw, camX));
+  camY = Math.max(0, Math.min(GAME_H - vh, camY));
+}
+
+// game coords → canvas coords
+function gToC(gx, gy) {
+  return { x: (gx - camX) * zoom, y: (gy - camY) * zoom };
+}
+// canvas coords → game coords
+function cToG(cx, cy) {
+  return { x: cx / zoom + camX, y: cy / zoom + camY };
+}
+
+// Scroll to zoom (mouse wheel)
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.15 : 0.15;
+  // Zoom toward mouse position
+  const r    = canvas.getBoundingClientRect();
+  const mx   = e.clientX - r.left;
+  const my   = e.clientY - r.top;
+  const gBefore = cToG(mx, my);
+  zoom = Math.max(0.4, Math.min(3.0, zoom + delta));
+  const gAfter  = cToG(mx, my);
+  camX += gBefore.x - gAfter.x;
+  camY += gBefore.y - gAfter.y;
+  clampCamera();
+  document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+}, { passive: false });
+
+// Pinch-to-zoom (touch)
+let lastPinchDist = 0;
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    lastPinchDist = Math.hypot(
+      e.touches[1].clientX - e.touches[0].clientX,
+      e.touches[1].clientY - e.touches[0].clientY
+    );
+  }
+}, { passive: true });
+canvas.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2) {
+    const d = Math.hypot(
+      e.touches[1].clientX - e.touches[0].clientX,
+      e.touches[1].clientY - e.touches[0].clientY
+    );
+    if (lastPinchDist > 0) changeZoom((d - lastPinchDist) * 0.01);
+    lastPinchDist = d;
+  }
+}, { passive: true });
+canvas.addEventListener('touchend', () => { lastPinchDist = 0; });
+
+// Minimap click → navigate
+miniCvs.addEventListener('click', (e) => {
+  const r  = miniCvs.getBoundingClientRect();
+  const gx = (e.clientX - r.left) / miniCvs.width  * GAME_W;
+  const gy = (e.clientY - r.top)  / miniCvs.height * GAME_H;
+  camX = gx - (canvas.width  / zoom) / 2;
+  camY = gy - (canvas.height / zoom) / 2;
+  clampCamera();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  CONNECTION
+// ═══════════════════════════════════════════════════════════════════
+function connectServer() {
+  const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+  const url = document.getElementById('serverUrl').value || `${protocol}://${location.host}`;
+  ws = new WebSocket(url);
+  ws.onopen  = () => { state.connected = true;  updateLoginUI(); };
+  ws.onerror = () => { state.connected = false; updateLoginUI(); };
+  ws.onclose = () => { state.connected = false; updateLoginUI(); };
+  ws.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      if (msg.type === 'JOIN_CONFIRMED') {
+        state.myPlayerId = msg.playerId;
+        state.myPlayer = { id:msg.playerId, name:document.getElementById('playerName').value, team:msg.team, kills:0, gold:500, energy:100 };
+        startGame();
+      } else if (msg.type === 'GAME_STATE') {
+        updateGameState(msg);
+      } else if (msg.type === 'CHAT_MESSAGE') {
+        addChatMessage(msg);
+      }
+    } catch(e) { console.error(e); }
+  };
+}
+
+function updateLoginUI() {
+  const sd = document.getElementById('statusDiv');
+  const jb = document.getElementById('joinBtn');
+  const ni = document.getElementById('playerName');
+  if (state.connected) {
+    sd.className = 'status status-connected'; sd.textContent = '✓ ONLINE';
+    jb.style.display = 'block'; jb.disabled = false; ni.disabled = false;
+  } else {
+    sd.className = 'status status-disconnected'; sd.textContent = '✗ OFFLINE';
+    jb.style.display = 'none'; ni.disabled = true;
+  }
+}
+
+function joinGame() {
+  const name = document.getElementById('playerName').value;
+  if (!name.trim() || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type:'JOIN_GAME', playerName:name }));
+}
+
+function startGame() {
+  gameOverShown = false;
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'flex';
+  document.getElementById('gameScreen').style.flexDirection = 'column';
+  document.getElementById('gameScreen').style.height = '100%';
+  state.gameStarted = true;
+  buildSpawnBar();
+  requestGameState();
+  gameLoop();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════════════════
+function updateGameState(msg) {
+  state.players      = msg.players      || [];
+  state.units        = msg.units        || [];
+  state.bases        = msg.bases        || [];
+  state.resourceNodes = msg.resourceNodes || [];
+  state.projectiles  = msg.projectiles  || [];
+  state.gameStatus   = msg.gameStatus   || 'waiting';
+  if (state.myPlayerId) {
+    const me = state.players.find(p => p.id === state.myPlayerId);
+    if (me) state.myPlayer = me;
+  }
+  updateUI();
+  if (msg.gameStatus === 'finished' && !gameOverShown) { gameOverShown = true; showGameOver(msg.winner); }
+}
+
+function requestGameState() {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type:'GET_STATE' }));
+}
+
+const MAX_COLLECTORS = 5;
+
+function updateUI() {
+  if (!state.myPlayer) return;
+  document.getElementById('playerNameDisplay').textContent = state.myPlayer.name;
+  document.getElementById('unitsCount').textContent   = state.units.filter(u => u.playerId === state.myPlayerId).length;
+  document.getElementById('killsCount').textContent   = state.myPlayer.kills;
+  document.getElementById('goldDisplay').textContent  = Math.round(state.myPlayer.gold);
+  document.getElementById('energyDisplay').textContent = Math.round(state.myPlayer.energy);
+
+  // Leaderboard
+  const lbEl = document.getElementById('lbPanel');
+  const sorted = [...state.players].sort((a,b) => b.kills - a.kills);
+  lbEl.innerHTML = sorted.slice(0,5).map((p,i) => {
+    const c = {blue:'#0088ff',red:'#ff2200',green:'#00ff00',yellow:'#ffff00',purple:'#ff00ff',orange:'#ff8800'}[p.team]||'#fff';
+    return `<div class="lb-item" style="border-color:${c}33;color:${c}">#${i+1} ${p.name} ${p.kills}K</div>`;
+  }).join('');
+
+  // Collector button
+  const collCount = state.units.filter(u => u.playerId === state.myPlayerId && u.type === 'collector').length;
+  const colBtn = document.getElementById('sb_collector');
+  if (colBtn) {
+    const badge = colBtn.querySelector('.badge');
+    if (badge) badge.textContent = `${collCount}/${MAX_COLLECTORS}`;
+    colBtn.classList.toggle('disabled-btn', collCount >= MAX_COLLECTORS);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SPAWN SIDEBAR
+// ═══════════════════════════════════════════════════════════════════
+function buildSpawnBar() {
+  const bar = document.getElementById('spawnBar');
+  bar.innerHTML = '';
+  UNIT_KEYS.forEach(type => {
+    const d = UNIT_DEFS[type];
+    const btn = document.createElement('div');
+    btn.className = 'spawn-btn';
+    btn.id = `sb_${type}`;
+    btn.innerHTML = `
+      <div class="s-icon">${d.icon}</div>
+      <div class="s-name">${d.name}</div>
+      <div class="s-cost">${d.gold}G ${d.energy}E</div>
+      ${type === 'collector' ? `<div class="badge">0/${MAX_COLLECTORS}</div>` : ''}
+    `;
+    // Single click → show info
+    btn.addEventListener('click', (e) => { e.stopPropagation(); showUnitInfo(type, btn); });
+    // Double click → spawn
+    btn.addEventListener('dblclick', (e) => { e.stopPropagation(); spawnUnit(type); });
+    // Touch: tap = info, double-tap = spawn
+    let lastTouchTime = 0;
+    btn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastTouchTime < 350) {
+        spawnUnit(type);
+      } else {
+        showUnitInfo(type, btn);
+      }
+      lastTouchTime = now;
+    });
+    bar.appendChild(btn);
+  });
+}
+
+// Unit info tooltip
+let infoTimeout = null;
+function showUnitInfo(type, btnEl) {
+  const d   = UNIT_DEFS[type];
+  const panel = document.getElementById('unitInfo');
+  document.getElementById('ui-name').textContent  = d.icon + ' ' + d.name;
+  document.getElementById('ui-hp').textContent    = d.hp;
+  document.getElementById('ui-dmg').textContent   = d.dmg;
+  document.getElementById('ui-range').textContent = d.range || '—';
+  document.getElementById('ui-spd').textContent   = d.spd;
+  document.getElementById('ui-cost').textContent  = `${d.gold}G / ${d.energy}E`;
+  document.getElementById('ui-hint').textContent  = d.hint;
+
+  const r = btnEl.getBoundingClientRect();
+  panel.style.display = 'block';
+  // Position to the left of the sidebar button
+  let left = r.left - 210;
+  if (left < 4) left = r.right + 6;
+  let top  = r.top;
+  if (top + 180 > window.innerHeight) top = window.innerHeight - 185;
+  panel.style.left = left + 'px';
+  panel.style.top  = top  + 'px';
+
+  clearTimeout(infoTimeout);
+  infoTimeout = setTimeout(() => { panel.style.display = 'none'; }, 4000);
+}
+
+// Hide info on click anywhere else
+document.addEventListener('click', () => {
+  document.getElementById('unitInfo').style.display = 'none';
+});
+
+function spawnUnit(type) {
+  if (!ws || ws.readyState !== WebSocket.OPEN || !state.myPlayer) return;
+  if (type === 'collector') {
+    const cnt = state.units.filter(u => u.playerId === state.myPlayerId && u.type === 'collector').length;
+    if (cnt >= MAX_COLLECTORS) return;
+  }
+  ws.send(JSON.stringify({ type:'SPAWN_UNIT', unitType:type }));
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CHAT
+// ═══════════════════════════════════════════════════════════════════
+function toggleChat() {
+  const bd = document.getElementById('chatBackdrop');
+  chatOpen = !chatOpen;
+  bd.classList.toggle('active', chatOpen);
+  if (chatOpen) {
+    chatUnreadCount = 0;
+    updateChatBadge();
+    const cm = document.getElementById('chatMessages');
+    cm.scrollTop = cm.scrollHeight;
+    setTimeout(() => document.getElementById('chatInput').focus(), 100);
+  }
+}
+function closeChatIfOutside(e) {
+  if (e.target === document.getElementById('chatBackdrop')) toggleChat();
+}
+function updateChatBadge() {
+  const badge = document.getElementById('chatUnread');
+  if (chatUnreadCount > 0 && !chatOpen) {
+    badge.textContent = chatUnreadCount; badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+function sendChatMessage() {
+  const inp = document.getElementById('chatInput');
+  const msg = inp.value.trim(); if (!msg || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type:'CHAT_MESSAGE', message:msg }));
+  inp.value = '';
+}
+function handleChatKeypress(e) { if (e.key === 'Enter') sendChatMessage(); }
+function addChatMessage(msg) {
+  const cm = document.getElementById('chatMessages');
+  const el = document.createElement('div');
+  el.className = `chat-message ${msg.team}`;
+  el.textContent = `${msg.playerName}: ${msg.message}`;
+  cm.appendChild(el);
+  cm.scrollTop = cm.scrollHeight;
+  if (!chatOpen) { chatUnreadCount++; updateChatBadge(); }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HELP
+// ═══════════════════════════════════════════════════════════════════
+function toggleHelp() {
+  const bd = document.getElementById('helpBackdrop');
+  bd.classList.toggle('active');
+}
+function closeHelpIfOutside(e) {
+  if (e.target === document.getElementById('helpBackdrop')) toggleHelp();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  UNIT CONTROL (mouse + touch, with camera pan)
+// ═══════════════════════════════════════════════════════════════════
+const DRAG_THRESHOLD = 8, UNIT_HIT_RADIUS = 14;
+let isDragging = false, dragStartX = 0, dragStartY = 0, dragCurrentX = 0, dragCurrentY = 0;
+let isPanning = false, panStartX = 0, panStartY = 0, panCamX = 0, panCamY = 0;
+
+function unitAtGamePos(gx, gy) {
+  for (const u of state.units) {
+    if (u.playerId !== state.myPlayerId) continue;
+    if (Math.hypot(u.x - gx, u.y - gy) < UNIT_HIT_RADIUS) return u;
+  }
+  return null;
+}
+function unitsInRect(x1,y1,x2,y2) {
+  const [mnX,mxX]=[Math.min(x1,x2),Math.max(x1,x2)];
+  const [mnY,mxY]=[Math.min(y1,y2),Math.max(y1,y2)];
+  return state.units.filter(u => u.playerId===state.myPlayerId && u.x>=mnX&&u.x<=mxX&&u.y>=mnY&&u.y<=mxY);
+}
+function moveSelectedUnits(gx, gy) {
+  if (!state.selectedUnits.size) return;
+  for (const id of state.selectedUnits)
+    if (ws && ws.readyState === WebSocket.OPEN)
+      ws.send(JSON.stringify({ type:'MOVE_UNIT', unitId:id, x:gx, y:gy }));
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  dragStartX = e.clientX; dragStartY = e.clientY;
+  dragCurrentX = e.clientX; dragCurrentY = e.clientY;
+  isDragging = false; e.preventDefault();
+});
+canvas.addEventListener('mousemove', (e) => {
+  if (!(e.buttons & 1)) return;
+  dragCurrentX = e.clientX; dragCurrentY = e.clientY;
+  if (Math.abs(dragCurrentX-dragStartX)>DRAG_THRESHOLD||Math.abs(dragCurrentY-dragStartY)>DRAG_THRESHOLD) isDragging=true;
+});
+canvas.addEventListener('mouseup', (e) => {
+  if (e.button !== 0) return;
+  const r = canvas.getBoundingClientRect();
+  const g = cToG(e.clientX - r.left, e.clientY - r.top);
+  if (isDragging) {
+    const sg = cToG(dragStartX - r.left, dragStartY - r.top);
+    const sel = unitsInRect(sg.x, sg.y, g.x, g.y);
+    if (!e.ctrlKey && !e.shiftKey) state.selectedUnits.clear();
+    sel.forEach(u => state.selectedUnits.add(u.id));
+  } else {
+    const clicked = unitAtGamePos(g.x, g.y);
+    if (clicked) {
+      if (e.ctrlKey||e.shiftKey) {
+        state.selectedUnits.has(clicked.id) ? state.selectedUnits.delete(clicked.id) : state.selectedUnits.add(clicked.id);
+      } else { state.selectedUnits.clear(); state.selectedUnits.add(clicked.id); }
+    } else if (state.selectedUnits.size > 0) {
+      moveSelectedUnits(g.x, g.y);
+    } else if (!e.ctrlKey && !e.shiftKey) {
+      state.selectedUnits.clear();
+    }
+  }
+  isDragging = false;
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// Touch
+let touchStartX=0, touchStartY=0, touchIsDrag=false;
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) { touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY; touchIsDrag=false; }
+}, { passive:true });
+canvas.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 1) {
+    if (Math.abs(e.touches[0].clientX-touchStartX)>DRAG_THRESHOLD||Math.abs(e.touches[0].clientY-touchStartY)>DRAG_THRESHOLD) touchIsDrag=true;
+  }
+}, { passive:true });
+canvas.addEventListener('touchend', (e) => {
+  if (e.changedTouches.length !== 1) return;
+  const t = e.changedTouches[0];
+  const r = canvas.getBoundingClientRect();
+  const g = cToG(t.clientX - r.left, t.clientY - r.top);
+  if (touchIsDrag) {
+    const sg = cToG(touchStartX - r.left, touchStartY - r.top);
+    const sel = unitsInRect(sg.x, sg.y, g.x, g.y);
+    state.selectedUnits.clear(); sel.forEach(u => state.selectedUnits.add(u.id));
+  } else {
+    const clicked = unitAtGamePos(g.x, g.y);
+    if (clicked) { state.selectedUnits.clear(); state.selectedUnits.add(clicked.id); }
+    else if (state.selectedUnits.size > 0) moveSelectedUnits(g.x, g.y);
+    else state.selectedUnits.clear();
+  }
+  touchIsDrag = false;
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  DRAWING
+// ═══════════════════════════════════════════════════════════════════
+const TEAM_COLORS = {
+  blue:'#0088ff', red:'#ff2200', green:'#00ff00',
+  yellow:'#ffff00', purple:'#ff00ff', orange:'#ff8800'
+};
+
+// Unit shapes per type (drawn in canvas coords)
+function drawUnitShape(ctx, type, x, y, size, color, team) {
+  ctx.fillStyle = color;
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+
+  switch(type) {
+    case 'soldier':
+      // Person shape: circle head + triangle body
+      ctx.beginPath(); ctx.arc(x, y - size*0.4, size*0.45, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x, y - size*0.05);
+      ctx.lineTo(x - size*0.6, y + size*0.8);
+      ctx.lineTo(x + size*0.6, y + size*0.8);
+      ctx.closePath(); ctx.fill();
+      break;
+    case 'tank':
+      // Square body + small turret
+      ctx.fillRect(x - size, y - size*0.7, size*2, size*1.4);
+      ctx.fillStyle = color + 'cc';
+      ctx.fillRect(x - size*0.4, y - size*1.1, size*0.8, size*0.5); // turret
+      ctx.fillStyle = '#000'; ctx.fillRect(x - size*0.1, y - size*1.5, size*0.2, size*0.5); // barrel
+      ctx.fillStyle = color;
+      break;
+    case 'fighter':
+      // Triangle plane shape
+      ctx.beginPath();
+      ctx.moveTo(x, y - size*1.1);
+      ctx.lineTo(x - size*0.9, y + size*0.7);
+      ctx.lineTo(x, y + size*0.2);
+      ctx.lineTo(x + size*0.9, y + size*0.7);
+      ctx.closePath(); ctx.fill();
+      break;
+    case 'cannon':
+      // Wide rectangle + long barrel
+      ctx.fillRect(x - size*0.8, y - size*0.5, size*1.6, size);
+      ctx.fillRect(x - size*0.1, y - size*1.4, size*0.2, size); // barrel
+      break;
+    case 'helicopter':
+      // Oval body + rotor lines
+      ctx.beginPath(); ctx.ellipse(x, y, size*0.6, size*0.9, 0, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = color; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x - size*1.2, y - size*0.8); ctx.lineTo(x + size*1.2, y - size*0.8); ctx.stroke();
+      break;
+    case 'bomber':
+      // Wide diamond
+      ctx.beginPath();
+      ctx.moveTo(x, y - size*1.2);
+      ctx.lineTo(x + size*1.1, y);
+      ctx.lineTo(x, y + size*0.8);
+      ctx.lineTo(x - size*1.1, y);
+      ctx.closePath(); ctx.fill();
+      break;
+    case 'collector':
+      // Box with arrow
+      ctx.fillRect(x - size*0.8, y - size*0.8, size*1.6, size*1.6);
+      ctx.fillStyle = '#000';
+      // Arrow inside
+      ctx.beginPath(); ctx.moveTo(x, y - size*0.5); ctx.lineTo(x, y + size*0.3);
+      ctx.moveTo(x - size*0.3, y); ctx.lineTo(x, y + size*0.3); ctx.lineTo(x + size*0.3, y);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      break;
+    default:
+      ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+function drawGame() {
+  const W = canvas.width, H = canvas.height;
+  if (!W || !H) return;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a0e27';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,255,136,0.04)';
+  ctx.lineWidth = 1;
+  const gridSz = 40 * zoom;
+  const offX = ((-camX * zoom) % gridSz + gridSz) % gridSz;
+  const offY = ((-camY * zoom) % gridSz + gridSz) % gridSz;
+  for (let x = offX - gridSz; x < W + gridSz; x += gridSz) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = offY - gridSz; y < H + gridSz; y += gridSz) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // Drag selection rect
+  if (isDragging) {
+    const cr = canvas.getBoundingClientRect();
+    const bx=dragStartX-cr.left, by=dragStartY-cr.top, ex=dragCurrentX-cr.left, ey=dragCurrentY-cr.top;
+    ctx.strokeStyle='rgba(0,255,136,0.85)'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+    ctx.strokeRect(Math.min(bx,ex),Math.min(by,ey),Math.abs(ex-bx),Math.abs(ey-by));
+    ctx.fillStyle='rgba(0,255,136,0.07)';
+    ctx.fillRect(Math.min(bx,ex),Math.min(by,ey),Math.abs(ex-bx),Math.abs(ey-by));
+    ctx.setLineDash([]);
+  }
+
+  // Resource nodes
+  state.resourceNodes.forEach(node => {
+    const {x, y} = gToC(node.x, node.y);
+    const pct = node.amount / node.maxAmount;
+    const r = 11 * zoom;
+    ctx.shadowBlur = 10; ctx.shadowColor = '#ffcc00';
+    ctx.fillStyle = `rgba(255,200,0,${0.2 + pct*0.5})`;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = pct > 0.4 ? '#ffdd00' : '#ff9900';
+    ctx.font = `${Math.round(8*zoom)}px monospace`; ctx.textAlign = 'center';
+    ctx.fillText(Math.round(node.amount), x, y+3*zoom);
+    // bar
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(x-r, y+r+2, r*2, 3*zoom);
+    ctx.fillStyle=pct>0.5?'#ffcc00':'#ff6600'; ctx.fillRect(x-r, y+r+2, r*2*pct, 3*zoom);
+  });
+
+  // Bases
+  state.bases.forEach(base => {
+    const {x, y} = gToC(base.x, base.y);
+    const color = TEAM_COLORS[base.team] || '#fff';
+    const hPct = Math.max(0, base.health / base.maxHealth);
+    const sz = 22 * zoom;
+    ctx.shadowBlur = 14; ctx.shadowColor = color;
+    ctx.fillStyle = color + '44'; ctx.fillRect(x-sz, y-sz, sz*2, sz*2);
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.strokeRect(x-sz, y-sz, sz*2, sz*2);
+    ctx.shadowBlur = 0;
+    // HP bar
+    const bw = sz*2+4;
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(x-sz-2, y-sz-10*zoom, bw, 5*zoom);
+    ctx.fillStyle = hPct>0.5?'#00ff88':hPct>0.25?'#ffaa00':'#ff2200';
+    ctx.fillRect(x-sz-2, y-sz-10*zoom, bw*hPct, 5*zoom);
+    ctx.fillStyle='#fff'; ctx.font=`${Math.round(8*zoom)}px monospace`; ctx.textAlign='center';
+    ctx.fillText(Math.round(base.health)+'/'+base.maxHealth, x, y-sz-12*zoom);
+  });
+
+  // Move target lines
+  state.units.forEach(u => {
+    if (!state.selectedUnits.has(u.id) || u.targetX==null) return;
+    const {x:ux,y:uy} = gToC(u.x, u.y);
+    const {x:tx,y:ty} = gToC(u.targetX, u.targetY);
+    const color = (TEAM_COLORS[u.team]||'#fff')+'50';
+    ctx.strokeStyle=color; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(ux,uy); ctx.lineTo(tx,ty); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#ffff0080'; ctx.beginPath(); ctx.arc(tx,ty,4*zoom,0,Math.PI*2); ctx.fill();
+  });
+
+  // Units
+  state.units.forEach(u => {
+    const {x, y} = gToC(u.x, u.y);
+    const color  = TEAM_COLORS[u.team] || '#fff';
+    const sz     = 5 * zoom;
+    const hPct   = u.health / u.maxHealth;
+
+    // Range ring only when selected
+    if (state.selectedUnits.has(u.id) && u.range > 0) {
+      ctx.strokeStyle = color + '25'; ctx.lineWidth = 1; ctx.setLineDash([2,5]);
+      ctx.beginPath(); ctx.arc(x, y, u.range * zoom, 0, Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    if (u.isShooting) { ctx.shadowBlur = 12; ctx.shadowColor = color; }
+
+    drawUnitShape(ctx, u.type, x, y, sz, color, u.team);
+    ctx.shadowBlur = 0;
+
+    // Collector cargo bar
+    if (u.type === 'collector') {
+      const carryPct = u.carrying / 150;
+      ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(x-sz*1.1, y+sz*1.1, sz*2.2, 3*zoom);
+      ctx.fillStyle = u.returning ? '#00ff88' : '#ffcc00';
+      ctx.fillRect(x-sz*1.1, y+sz*1.1, sz*2.2*carryPct, 3*zoom);
+      if (u.returning && zoom > 0.7) {
+        ctx.fillStyle='#00ff88cc'; ctx.font=`${Math.round(9*zoom)}px monospace`; ctx.textAlign='center';
+        ctx.fillText('↩', x, y+sz*2.2);
+      }
+    }
+
+    // Selection ring
+    if (state.selectedUnits.has(u.id)) {
+      ctx.strokeStyle='#ffff00'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(x, y, sz*1.5, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // HP bar
+    const bw = sz*2.2;
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(x-sz*1.1, y-sz*1.6, bw, 2.5*zoom);
+    ctx.fillStyle = hPct>0.5?'#00ff88':hPct>0.25?'#ffaa00':'#ff2200';
+    ctx.fillRect(x-sz*1.1, y-sz*1.6, bw*hPct, 2.5*zoom);
+  });
+
+  // Projectiles
+  state.projectiles.forEach(proj => {
+    const {x, y} = gToC(proj.x, proj.y);
+    const color  = TEAM_COLORS[proj.team] || '#fff';
+    ctx.shadowBlur = 5; ctx.shadowColor = color;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 2.5*zoom, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = color;  ctx.beginPath(); ctx.arc(x, y, 1.5*zoom, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+
+  // HUD
+  if (state.selectedUnits.size > 0) {
+    ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(W-140,8,132,22);
+    ctx.fillStyle='#ffff00'; ctx.font='11px monospace'; ctx.textAlign='right';
+    ctx.fillText(`✔ ${state.selectedUnits.size} selectate`, W-10, 24);
+    ctx.textAlign='left';
+  }
+  if (state.gameStatus === 'waiting') {
+    ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(W/2-110,10,220,28);
+    ctx.fillStyle='#ffaa00'; ctx.font='13px monospace'; ctx.textAlign='center';
+    ctx.fillText('⏳ Se asteapta jucatori...', W/2, 28);
+    ctx.textAlign='left';
+  }
+
+  // Draw minimap
+  drawMinimap();
+}
+
+function drawMinimap() {
+  const mw = miniCvs.width, mh = miniCvs.height;
+  miniCtx.fillStyle='rgba(5,8,22,0.92)'; miniCtx.fillRect(0,0,mw,mh);
+  miniCtx.strokeStyle='rgba(0,255,136,0.3)'; miniCtx.lineWidth=1;
+  miniCtx.strokeRect(0,0,mw,mh);
+
+  const sx = mw / GAME_W, sy = mh / GAME_H;
+
+  // Resource nodes
+  state.resourceNodes.forEach(n => {
+    const pct = n.amount / n.maxAmount;
+    miniCtx.fillStyle = `rgba(255,200,0,${0.4+pct*0.5})`;
+    miniCtx.fillRect(n.x*sx-2, n.y*sy-2, 4, 4);
+  });
+
+  // Bases
+  state.bases.forEach(b => {
+    miniCtx.fillStyle = TEAM_COLORS[b.team]||'#fff';
+    miniCtx.fillRect(b.x*sx-4, b.y*sy-4, 8, 8);
+  });
+
+  // Units (1px dots)
+  state.units.forEach(u => {
+    miniCtx.fillStyle = TEAM_COLORS[u.team]||'#fff';
+    miniCtx.fillRect(u.x*sx-1, u.y*sy-1, 2.5, 2.5);
+  });
+
+  // Viewport rectangle
+  const vx = camX*sx, vy = camY*sy;
+  const vw = (canvas.width/zoom)*sx, vh = (canvas.height/zoom)*sy;
+  miniCtx.strokeStyle='rgba(255,255,255,0.5)'; miniCtx.lineWidth=1;
+  miniCtx.strokeRect(vx, vy, Math.min(vw,mw), Math.min(vh,mh));
+}
+
+function gameLoop() { drawGame(); requestAnimationFrame(gameLoop); }
+
+function showGameOver(winner) {
+  const isWin = winner === state.myPlayer?.team;
+  const el = document.createElement('div'); el.className='game-over';
+  el.innerHTML=`<div class="game-over-card">
+    <div class="game-over-title">${isWin?'🏆 VICTORIE':'💀 ÎNFRÂNGERE'}</div>
+    <p style="margin:.5rem 0">Echipa: <b style="color:${TEAM_COLORS[winner]||'#fff'}">${(winner||'').toUpperCase()}</b></p>
+    <p style="margin:.5rem 0">Eliminări: <b>${state.myPlayer?.kills||0}</b></p>
+    <button class="login-btn" onclick="location.reload()" style="margin-top:1rem">JOACĂ DIN NOU</button>
+  </div>`;
+  document.body.appendChild(el);
+}
+
+setInterval(() => { if (state.gameStarted && state.connected) requestGameState(); }, 100);
+updateLoginUI();
+</script>
+</body>
+</html>
