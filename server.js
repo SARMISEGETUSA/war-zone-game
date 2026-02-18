@@ -20,7 +20,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve HTML directly from root
 app.get('/', (req, res) => {
   const htmlPath = path.join(__dirname, 'index.html');
   if (fs.existsSync(htmlPath)) {
@@ -66,10 +65,7 @@ const UNIT_TYPES = {
   cannon:     { health: 40,  maxHealth: 40,  damage: 50, speed: 0.4, range: 160, attackCooldown: 1200, cost: { gold: 200, energy: 100 } },
   helicopter: { health: 60,  maxHealth: 60,  damage: 40, speed: 3.8, range: 120, attackCooldown: 500,  cost: { gold: 250, energy: 120 } },
   bomber:     { health: 70,  maxHealth: 70,  damage: 65, speed: 2.2, range: 180, attackCooldown: 1500, cost: { gold: 300, energy: 150 } },
-  collector:  { health: 25,  maxHealth: 25,  damage: 0,  speed: 2,   range: 0,   attackCooldown: 9999, cost: { gold: 20,  energy: 10  } },
-  constructor:{ health: 35,  maxHealth: 35,  damage: 5,  speed: 1.5, range: 40,  attackCooldown: 800,  cost: { gold: 80,  energy: 60  } },
-  turret:     { health: 80,  maxHealth: 80,  damage: 45, speed: 0,   range: 150, attackCooldown: 400,  cost: { gold: 150, energy: 100 } },
-  barracks:   { health: 100, maxHealth: 100, damage: 0,  speed: 0,   range: 0,   attackCooldown: 9999, cost: { gold: 200, energy: 150 } }
+  collector:  { health: 25,  maxHealth: 25,  damage: 0,  speed: 2,   range: 0,   attackCooldown: 9999, cost: { gold: 20,  energy: 10  } }
 };
 
 function spawnPosition(baseX, baseY) {
@@ -81,67 +77,24 @@ function spawnPosition(baseX, baseY) {
   };
 }
 
-const MAP_OBSTACLES = [
-  { x: 500, y: 200, radius: 80, type: 'rock' },
-  { x: 300, y: 400, radius: 60, type: 'rock' },
-  { x: 700, y: 400, radius: 60, type: 'rock' },
-  { x: 500, y: 600, radius: 80, type: 'rock' },
-  { x: 150, y: 150, radius: 50, type: 'forest' },
-  { x: 850, y: 150, radius: 50, type: 'forest' },
-  { x: 150, y: 650, radius: 50, type: 'forest' },
-  { x: 850, y: 650, radius: 50, type: 'forest' }
-];
-
 const RESOURCE_NODES = [
   { id:'node_0',  x:500, y:400, amount:500, maxAmount:500 },
   { id:'node_1',  x:350, y:350, amount:400, maxAmount:400 },
   { id:'node_2',  x:650, y:450, amount:400, maxAmount:400 },
   { id:'node_3',  x:200, y:400, amount:450, maxAmount:450 },
   { id:'node_4',  x:800, y:400, amount:450, maxAmount:450 },
-  { id:'node_5',  x:350, y:200, amount:350, maxAmount:350 },
-  { id:'node_6',  x:500, y:150, amount:350, maxAmount:350 },
-  { id:'node_7',  x:650, y:200, amount:350, maxAmount:350 },
-  { id:'node_8',  x:350, y:600, amount:350, maxAmount:350 },
-  { id:'node_9',  x:500, y:650, amount:350, maxAmount:350 },
-  { id:'node_10', x:650, y:600, amount:350, maxAmount:350 },
-  { id:'node_11', x:200, y:250, amount:300, maxAmount:300 },
-  { id:'node_12', x:800, y:550, amount:300, maxAmount:300 },
-  { id:'node_13', x:200, y:550, amount:300, maxAmount:300 },
-  { id:'node_14', x:800, y:250, amount:300, maxAmount:300 }
+  { id:'node_5',  x:450, y:200, amount:400, maxAmount:400 },
+  { id:'node_6',  x:550, y:600, amount:400, maxAmount:400 },
+  { id:'node_7',  x:300, y:600, amount:350, maxAmount:350 }
 ];
 
-let projectiles = [];
-let projIdCounter = 0;
-
-class Projectile {
-  constructor(shooterId, shooterPlayerId, shooterTeam, x, y, tx, ty, damage) {
-    this.id = `p${++projIdCounter}`;
-    this.shooterId = shooterId;
-    this.shooterPlayerId = shooterPlayerId;
-    this.shooterTeam = shooterTeam;
-    const d = Math.hypot(tx - x, ty - y) || 1;
-    const spd = 9;
-    this.x = x; this.y = y;
-    this.vx = (tx - x) / d * spd;
-    this.vy = (ty - y) / d * spd;
-    this.damage = damage;
-    this.alive = true;
-    this.maxDist = Math.hypot(tx - x, ty - y) + 15;
-    this.travelDist = 0;
-  }
-  update() {
-    this.x += this.vx; this.y += this.vy;
-    this.travelDist += Math.hypot(this.vx, this.vy);
-    if (this.travelDist >= this.maxDist || this.x < 0 || this.x > GAME_CONFIG.MAP_WIDTH ||
-        this.y < 0 || this.y > GAME_CONFIG.MAP_HEIGHT) {
-      this.alive = false;
-    }
-  }
-}
-
 class GameState {
-  constructor() { this.reset(); }
+  constructor() {
+    this.reset();
+  }
+
   reset() {
+    console.log('[RESET] Creating fresh game state');
     this.players = new Map();
     this.units = new Map();
     this.bases = new Map();
@@ -152,46 +105,68 @@ class GameState {
     this.winner = null;
     this.version = '3.1';
     this.messages = [];
-    projectiles = [];
-    projIdCounter = 0;
-    console.log('[RESET] Fresh game state');
   }
+
   canStartGame() {
-    const alive = Array.from(this.players.values()).filter(p => p.isAlive);
-    if (alive.length >= GAME_CONFIG.MIN_PLAYERS_TO_START && !this.gameStarted) {
-      console.log('[START] ' + alive.length + ' players');
+    const alivePlayers = Array.from(this.players.values()).filter(p => p.isAlive);
+    
+    if (alivePlayers.length >= GAME_CONFIG.MIN_PLAYERS_TO_START && !this.gameStarted) {
+      console.log('[START_GAME] Game starting with ' + alivePlayers.length + ' players');
       this.gameStatus = 'playing';
       this.gameStarted = true;
       this.gameStartTime = Date.now();
       return true;
     }
-    if (alive.length < GAME_CONFIG.MIN_PLAYERS_TO_START) this.gameStatus = 'waiting';
+    
+    if (alivePlayers.length < GAME_CONFIG.MIN_PLAYERS_TO_START) {
+      this.gameStatus = 'waiting';
+    }
+    
     return false;
   }
+
   isGameFinished() {
-    if (this.gameStatus !== 'playing' || !this.gameStarted) return false;
+    if (this.gameStatus !== 'playing' || !this.gameStarted) {
+      return false;
+    }
+
     const alive = Array.from(this.players.values()).filter(p => p.isAlive);
-    if (!alive.length) return false;
+    
+    if (alive.length === 0) {
+      return false;
+    }
+
     const teams = new Set(alive.map(p => p.team));
+    
     if (teams.size === 1) {
+      const winner = alive[0].team;
+      console.log('[WIN] ' + winner.toUpperCase() + ' TEAM WINS');
       this.gameStatus = 'finished';
-      this.winner = alive[0].team;
+      this.winner = winner;
       this.gameStarted = false;
-      console.log('[WIN]', this.winner.toUpperCase());
       return true;
     }
+
     if (this.gameStartTime && Date.now() - this.gameStartTime >= GAME_CONFIG.GAME_DURATION_MS) {
-      let maxK = 0, winTeam = [...teams][0];
-      for (const t of teams) {
-        const k = alive.filter(p => p.team === t).reduce((s, p) => s + p.kills, 0);
-        if (k > maxK) { maxK = k; winTeam = t; }
+      const teams_array = Array.from(teams);
+      let maxKills = 0;
+      let winnerTeam = teams_array[0];
+      
+      for (const team of teams_array) {
+        const kills = alive.filter(p => p.team === team).reduce((sum, p) => sum + p.kills, 0);
+        if (kills > maxKills) {
+          maxKills = kills;
+          winnerTeam = team;
+        }
       }
+      
+      console.log('[WIN] TIME - ' + winnerTeam.toUpperCase());
       this.gameStatus = 'finished';
-      this.winner = winTeam;
+      this.winner = winnerTeam;
       this.gameStarted = false;
-      console.log('[WIN] TIME', winTeam.toUpperCase());
       return true;
     }
+
     return false;
   }
 }
@@ -201,12 +176,20 @@ let unitIdCounter = 0;
 let playerIdCounter = 0;
 const TEAMS = ['blue', 'red', 'green', 'yellow', 'purple', 'orange'];
 const BASE_POSITIONS = [
-  { x: 100, y: 100 }, { x: 900, y: 700 },
-  { x: 100, y: 700 }, { x: 900, y: 100 },
-  { x: 500, y: 100 }, { x: 500, y: 700 }
+  { x: 100, y: 100 },
+  { x: 900, y: 700 },
+  { x: 100, y: 700 },
+  { x: 900, y: 100 },
+  { x: 500, y: 100 },
+  { x: 500, y: 700 }
 ];
 
-console.log(`\n${'='.repeat(60)}\n🎮 WAR ZONE SERVER V3.1\n${'='.repeat(60)}\n`);
+console.log(`\n${'='.repeat(70)}`);
+console.log(`🎮 WAR ZONE SERVER V3.1 - SYNC FIX`);
+console.log(`${'='.repeat(70)}`);
+console.log(`📡 WebSocket broadcasting to ALL clients`);
+console.log(`👥 Multi-player: 2-6 players`);
+console.log(`${'='.repeat(70)}\n`);
 
 class Player {
   constructor(id, name, team, ws) {
@@ -221,14 +204,19 @@ class Player {
     this.kills = 0;
     this.gold = 500;
     this.energy = 100;
+    this.joinedAt = Date.now();
     this.isAlive = true;
-    console.log(`[PLAYER] ${name} (${team})`);
+
+    console.log(`[PLAYER_JOIN] ${name} (${team}) - Total players: ${Array.from(gameState.players.values()).length + 1}`);
   }
+
   send(data) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(data));
-      } catch(e) {}
+      } catch (e) {
+        console.error(`[SEND_ERROR] ${e.message}`);
+      }
     }
   }
 }
@@ -240,142 +228,81 @@ class Unit {
     this.type = type;
     this.x = x;
     this.y = y;
-    this.team = team;
     this.targetX = null;
     this.targetY = null;
     this.vx = 0;
     this.vy = 0;
-    Object.assign(this, UNIT_TYPES[type]);
-    this.lastAttack = 0;
-    this.isShooting = false;
+    this.team = team;
+
+    const stats = UNIT_TYPES[type];
+    Object.assign(this, stats);
+    
+    this.targetId = null;
+    this.targetNode = null;
     this.carrying = 0;
-    this.returning = false;
-    this.targetNodeId = null;
+    this.lastAttack = 0;
   }
 
-  findEnemy(allUnits) {
-    const detect = this.range * 1.6;
-    let nearest = null, minDist = detect;
-    for (const u of allUnits) {
-      if (u.team !== this.team && u.health > 0) {
-        const d = Math.hypot(u.x - this.x, u.y - this.y);
-        if (d < minDist) { minDist = d; nearest = u; }
+  findTarget(allUnits) {
+    let nearest = null;
+    let minDist = this.range;
+
+    for (const unit of allUnits) {
+      if (unit.team !== this.team && unit.health > 0) {
+        const dist = Math.hypot(unit.x - this.x, unit.y - this.y);
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = unit;
+        }
       }
     }
+
     return nearest;
   }
 
   updateAI(allUnits) {
-    const enemy = this.findEnemy(allUnits);
-    if (this.type === 'barracks' || this.type === 'turret') {
-      if (this.type === 'turret' && enemy) {
-        const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
-        if (dist <= this.range) {
-          this.isShooting = true;
-          const now = Date.now();
-          if (now - this.lastAttack >= this.attackCooldown) {
-            this.lastAttack = now;
-            projectiles.push(new Projectile(this.id, this.playerId, this.team,
-              this.x, this.y, enemy.x, enemy.y, this.damage));
-          }
-        } else {
-          this.isShooting = false;
-        }
-      }
-      return;
-    }
+    const target = this.findTarget(allUnits);
 
-    if (enemy) {
-      const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
-      if (dist <= this.range) {
-        this.vx = 0; this.vy = 0;
-        this.isShooting = true;
-        const now = Date.now();
-        if (now - this.lastAttack >= this.attackCooldown) {
-          this.lastAttack = now;
-          projectiles.push(new Projectile(this.id, this.playerId, this.team,
-            this.x, this.y, enemy.x, enemy.y, this.damage));
-        }
-      } else {
-        this.isShooting = false;
-        const dx = enemy.x - this.x, dy = enemy.y - this.y;
-        const d = Math.hypot(dx, dy);
-        this.vx = (dx / d) * this.speed;
-        this.vy = (dy / d) * this.speed;
-      }
-    } else if (this.targetX !== null) {
-      this.isShooting = false;
-      const dx = this.targetX - this.x, dy = this.targetY - this.y;
-      const d = Math.hypot(dx, dy);
-      if (d > 2) {
-        this.vx = (dx / d) * this.speed;
-        this.vy = (dy / d) * this.speed;
-      } else {
-        this.vx = 0; this.vy = 0;
-        this.targetX = null;
-        this.targetY = null;
-      }
-    } else {
-      this.vx = 0; this.vy = 0;
-      this.isShooting = false;
-    }
-  }
+    if (target && this.range > 0) {
+      this.targetX = target.x;
+      this.targetY = target.y;
+      const dx = target.x - this.x;
+      const dy = target.y - this.y;
+      const dist = Math.hypot(dx, dy);
 
-  updateCollector(player) {
-    if (!player) return;
-    if (this.returning) {
-      const db = Math.hypot(this.x - player.baseX, this.y - player.baseY);
-      if (db < 40) {
-        player.gold += this.carrying;
-        player.energy = Math.min(player.energy + this.carrying * 0.2, 500);
-        this.carrying = 0;
-        this.returning = false;
-        this.targetNodeId = null;
-        this.targetX = null;
-        this.targetY = null;
-      } else {
-        this.targetX = player.baseX;
-        this.targetY = player.baseY;
+      if (dist > 0) {
+        this.vx = (dx / dist) * this.speed;
+        this.vy = (dy / dist) * this.speed;
       }
-    } else {
-      let bestNode = null, bestDist = Infinity;
-      for (const node of RESOURCE_NODES) {
-        if (node.amount > 0) {
-          const d = Math.hypot(this.x - node.x, this.y - node.y);
-          if (d < bestDist) { bestDist = d; bestNode = node; }
-        }
-      }
-      if (bestNode) {
-        this.targetNodeId = bestNode.id;
-        this.targetX = bestNode.x;
-        this.targetY = bestNode.y;
-        if (bestDist < 28) {
-          const take = Math.min(GAME_CONFIG.COLLECTOR_COLLECT_RATE, bestNode.amount,
-                                GAME_CONFIG.COLLECTOR_CARRY_MAX - this.carrying);
-          this.carrying += take;
-          bestNode.amount = Math.max(0, bestNode.amount - take);
-          if (this.carrying >= GAME_CONFIG.COLLECTOR_CARRY_MAX) this.returning = true;
-        }
-      }
-    }
-    if (this.targetX !== null) {
-      const dx = this.targetX - this.x, dy = this.targetY - this.y;
-      const d = Math.hypot(dx, dy);
-      if (d > 4) {
-        this.vx = (dx / d) * this.speed;
-        this.vy = (dy / d) * this.speed;
+    } else if (this.targetX !== null && this.targetY !== null) {
+      const dx = this.targetX - this.x;
+      const dy = this.targetY - this.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 2) {
+        this.vx = (dx / dist) * this.speed;
+        this.vy = (dy / dist) * this.speed;
       } else {
         this.vx = 0;
         this.vy = 0;
+        this.targetX = null;
+        this.targetY = null;
       }
+    } else {
+      this.vx = 0;
+      this.vy = 0;
     }
   }
 
   update() {
     this.x += this.vx;
     this.y += this.vy;
-    this.x = Math.max(10, Math.min(GAME_CONFIG.MAP_WIDTH - 10, this.x));
-    this.y = Math.max(10, Math.min(GAME_CONFIG.MAP_HEIGHT - 10, this.y));
+
+    if (this.x <= 0 || this.x >= GAME_CONFIG.MAP_WIDTH) this.vx *= -1;
+    if (this.y <= 0 || this.y >= GAME_CONFIG.MAP_HEIGHT) this.vy *= -1;
+
+    this.x = Math.max(0, Math.min(GAME_CONFIG.MAP_WIDTH, this.x));
+    this.y = Math.max(0, Math.min(GAME_CONFIG.MAP_HEIGHT, this.y));
   }
 }
 
@@ -392,47 +319,48 @@ class Base {
 }
 
 wss.on('connection', (ws) => {
-  console.log('[WS] New connection');
+  console.log(`[CONNECT] Total clients: ${wss.clients.size}`);
+
   let playerId = null;
 
-  ws.on('message', (msg) => {
+  ws.on('message', (message) => {
     try {
-      const data = JSON.parse(msg);
+      const data = JSON.parse(message);
+
       switch (data.type) {
         case 'JOIN_GAME':
           playerId = handleJoinGame(ws, data);
           break;
+
         case 'SPAWN_UNIT':
           if (playerId) handleSpawnUnit(playerId, data);
           break;
+
         case 'MOVE_UNIT':
           if (playerId) handleMoveUnit(playerId, data);
           break;
+
         case 'GET_STATE':
           if (playerId) sendGameState(ws, playerId);
           break;
-        case 'GET_PLAYERS':
-          sendOnlinePlayers(ws);
-          break;
+
         case 'CHAT_MESSAGE':
           if (playerId) handleChatMessage(playerId, data);
           break;
+
         case 'PING':
           ws.send(JSON.stringify({ type: 'PONG' }));
           break;
       }
-    } catch(e) {
-      console.error('[MSG_ERR]', e.message);
+    } catch (e) {
+      console.error(`[ERROR] ${e.message}`);
     }
   });
 
   ws.on('close', () => {
-    console.log('[WS] Connection closed');
-    if (playerId) handleDisconnect(playerId);
-  });
-
-  ws.on('error', (err) => {
-    console.error('[WS_ERR]', err.message);
+    if (playerId) {
+      handleDisconnect(playerId);
+    }
   });
 });
 
@@ -442,17 +370,31 @@ function handleJoinGame(ws, data) {
     unitIdCounter = 0;
     playerIdCounter = 0;
   }
+
   const playerId = `player_${++playerIdCounter}`;
-  const tc = {};
-  TEAMS.forEach(t => tc[t] = 0);
-  gameState.players.forEach(p => { if (tc[p.team] !== undefined) tc[p.team]++; });
-  let team = TEAMS[0], minC = tc[TEAMS[0]];
-  TEAMS.forEach(t => { if (tc[t] < minC) { team = t; minC = tc[t]; } });
+  
+  const teamCounts = {};
+  TEAMS.forEach(t => teamCounts[t] = 0);
+  Array.from(gameState.players.values()).forEach(p => {
+    if (teamCounts[p.team] !== undefined) teamCounts[p.team]++;
+  });
+  
+  let team = TEAMS[0];
+  let minCount = teamCounts[TEAMS[0]];
+  for (const t of TEAMS) {
+    if (teamCounts[t] < minCount) {
+      team = t;
+      minCount = teamCounts[t];
+    }
+  }
 
   const player = new Player(playerId, data.playerName, team, ws);
   gameState.players.set(playerId, player);
-  const base = new Base(`base_${playerId}`, playerId, player.baseX, player.baseY, team);
-  gameState.bases.set(base.id, base);
+
+  const baseId = `base_${playerId}`;
+  const base = new Base(baseId, playerId, player.baseX, player.baseY, team);
+  gameState.bases.set(baseId, base);
+
   gameState.canStartGame();
 
   ws.send(JSON.stringify({
@@ -464,66 +406,59 @@ function handleJoinGame(ws, data) {
     version: '3.1',
     gameStatus: gameState.gameStatus
   }));
+
+  // ===== FIX #1: BROADCAST TO ALL CLIENTS =====
   broadcastGameState();
   return playerId;
 }
 
-function sendOnlinePlayers(ws) {
-  const players = Array.from(gameState.players.values()).map(p => ({
-    id: p.id,
-    name: p.name,
-    team: p.team,
-    kills: p.kills,
-    isAlive: p.isAlive
-  }));
-  ws.send(JSON.stringify({ type: 'PLAYERS_LIST', players }));
-}
-
-const MAX_COLLECTORS_PER_PLAYER = 5;
-
 function handleSpawnUnit(playerId, data) {
   const player = gameState.players.get(playerId);
   if (!player || !player.isAlive || gameState.gameStatus !== 'playing') return;
-  const stats = UNIT_TYPES[data.unitType];
-  if (!stats || player.gold < stats.cost.gold || player.energy < stats.cost.energy) return;
 
-  if (data.unitType === 'collector') {
-    const collectorCount = Array.from(gameState.units.values())
-      .filter(u => u.playerId === playerId && u.type === 'collector').length;
-    if (collectorCount >= MAX_COLLECTORS_PER_PLAYER) {
-      broadcastMessage(playerId, `❌ Max ${MAX_COLLECTORS_PER_PLAYER} collectors!`, 'SYSTEM', player.team);
-      return;
-    }
-  }
+  const unitType = data.unitType;
+  const stats = UNIT_TYPES[unitType];
+  if (!stats) return;
 
+  if (player.gold < stats.cost.gold || player.energy < stats.cost.energy) return;
+
+  const unitId = `unit_${++unitIdCounter}`;
   const pos = spawnPosition(player.baseX, player.baseY);
-  const unit = new Unit(`unit_${++unitIdCounter}`, playerId, data.unitType, pos.x, pos.y, player.team);
-  gameState.units.set(unit.id, unit);
+  const unit = new Unit(unitId, playerId, unitType, pos.x, pos.y, player.team);
+
+  gameState.units.set(unitId, unit);
   player.gold -= stats.cost.gold;
   player.energy -= stats.cost.energy;
+
+  console.log(`[SPAWN] ${player.name} spawned ${unitType} - Total units: ${gameState.units.size}`);
+
+  // ===== FIX #1: BROADCAST TO ALL CLIENTS =====
   broadcastGameState();
 }
 
 function handleMoveUnit(playerId, data) {
   const unit = gameState.units.get(data.unitId);
   if (!unit || unit.playerId !== playerId) return;
+
   unit.targetX = data.x;
   unit.targetY = data.y;
-  if (unit.type === 'collector') {
-    unit.returning = false;
-    unit.targetNodeId = null;
-  }
+
+  // ===== FIX #1: BROADCAST TO ALL CLIENTS =====
+  broadcastGameState();
 }
 
 function handleChatMessage(playerId, data) {
   const player = gameState.players.get(playerId);
   if (!player) return;
+
   const msg = data.message.trim();
-  if (!msg) return;
+  if (msg.length === 0) return;
+
   if (msg.startsWith('/')) {
     handleCommand(playerId, msg);
     return;
   }
+
   gameState.messages.push({
     playerId,
     playerName: player.name,
@@ -531,30 +466,51 @@ function handleChatMessage(playerId, data) {
     message: msg,
     timestamp: Date.now()
   });
-  if (gameState.messages.length > 50) gameState.messages.shift();
+
+  if (gameState.messages.length > 50) {
+    gameState.messages.shift();
+  }
+
   broadcastMessage(playerId, msg, player.name, player.team);
 }
 
 function handleCommand(playerId, cmd) {
   const player = gameState.players.get(playerId);
   if (!player) return;
-  const command = cmd.split(' ')[0].toLowerCase();
-  let r = '';
-  if (command === '/stats') r = `HP=${player.health} K=${player.kills} G=${Math.round(player.gold)} E=${Math.round(player.energy)}`;
-  else if (command === '/units') r = `Units: ${Array.from(gameState.units.values()).filter(u => u.playerId === playerId).length}`;
-  else if (command === '/help') r = '/stats /units /heal /boost';
-  else if (command === '/heal') { player.health = Math.min(100, player.health + 20); r = '+20 HP'; }
-  else if (command === '/boost') { player.gold += 100; r = '+100 Gold'; }
-  else r = 'Unknown. /help';
-  broadcastMessage(playerId, r, 'SYSTEM', player.team);
+
+  const parts = cmd.split(' ');
+  const command = parts[0].toLowerCase();
+
+  let response = '';
+
+  if (command === '/stats') {
+    response = `Stats: HP=${player.health} Kills=${player.kills} Gold=${Math.round(player.gold)} Energy=${Math.round(player.energy)}`;
+  } else if (command === '/units') {
+    const count = Array.from(gameState.units.values()).filter(u => u.playerId === playerId).length;
+    response = `You have ${count} units`;
+  } else if (command === '/help') {
+    response = 'Commands: /stats /units /help';
+  } else {
+    response = 'Unknown command. Type /help';
+  }
+
+  broadcastMessage(playerId, response, 'SYSTEM', player.team);
 }
 
 function broadcastMessage(playerId, message, playerName, team) {
-  wss.clients.forEach(c => {
-    if (c.readyState === WebSocket.OPEN) {
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
       try {
-        c.send(JSON.stringify({ type: 'CHAT_MESSAGE', playerId, playerName, team, message }));
-      } catch(e) {}
+        client.send(JSON.stringify({
+          type: 'CHAT_MESSAGE',
+          playerId,
+          playerName,
+          team,
+          message
+        }));
+      } catch (e) {
+        console.error(`[MSG_ERROR] ${e.message}`);
+      }
     }
   });
 }
@@ -564,81 +520,93 @@ function handleDisconnect(playerId) {
   if (player) {
     player.isAlive = false;
     player.ws = null;
+    console.log(`[DISCONNECT] ${player.name} disconnected`);
   }
-  gameState.units.forEach((u, id) => {
-    if (u.playerId === playerId) gameState.units.delete(id);
-  });
-  gameState.bases.forEach((b, id) => {
-    if (b.playerId === playerId) gameState.bases.delete(id);
-  });
+
+  for (const [unitId, unit] of gameState.units) {
+    if (unit.playerId === playerId) {
+      gameState.units.delete(unitId);
+    }
+  }
+
+  for (const [baseId, base] of gameState.bases) {
+    if (base.playerId === playerId) {
+      gameState.bases.delete(baseId);
+    }
+  }
+
   gameState.players.delete(playerId);
-  if (Array.from(gameState.players.values()).filter(p => p.isAlive).length < GAME_CONFIG.MIN_PLAYERS_TO_START) {
+
+  const alive = Array.from(gameState.players.values()).filter(p => p.isAlive).length;
+  if (alive < GAME_CONFIG.MIN_PLAYERS_TO_START) {
     gameState.gameStatus = 'waiting';
     gameState.gameStarted = false;
   }
+
+  // ===== FIX #1: BROADCAST TO ALL CLIENTS =====
   broadcastGameState();
 }
 
 function sendGameState(ws, forPlayerId) {
-  const st = buildGameState();
-  st.myPlayerId = forPlayerId;
+  const state = buildGameState();
+  state.myPlayerId = forPlayerId;
+
   if (ws.readyState === WebSocket.OPEN) {
     try {
-      ws.send(JSON.stringify(st));
-    } catch(e) {}
+      ws.send(JSON.stringify(state));
+    } catch (e) {
+      console.error(`[ERROR] ${e.message}`);
+    }
   }
 }
 
 function buildGameState() {
-  const playersList = Array.from(gameState.players.values()).map(p => ({
-    id: p.id,
-    name: p.name,
-    team: p.team,
-    baseX: p.baseX,
-    baseY: p.baseY,
-    health: p.health,
-    kills: p.kills,
-    gold: p.gold,
-    energy: p.energy,
-    isAlive: p.isAlive
-  }));
+  const playersList = Array.from(gameState.players.values())
+    .filter(p => p.isAlive)
+    .map(p => ({
+      id: p.id,
+      name: p.name,
+      team: p.team,
+      baseX: p.baseX,
+      baseY: p.baseY,
+      health: p.health,
+      kills: p.kills,
+      gold: p.gold,
+      energy: p.energy,
+      isAlive: p.isAlive
+    }));
 
-  const unitsList = Array.from(gameState.units.values()).filter(u => u.health > 0).map(u => ({
-    id: u.id,
-    playerId: u.playerId,
-    type: u.type,
-    x: Math.round(u.x),
-    y: Math.round(u.y),
-    targetX: u.targetX != null ? Math.round(u.targetX) : undefined,
-    targetY: u.targetY != null ? Math.round(u.targetY) : undefined,
-    health: Math.round(u.health),
-    maxHealth: u.maxHealth,
-    team: u.team,
-    range: u.range,
-    damage: u.damage,
-    isShooting: u.isShooting || false,
-    carrying: u.carrying || 0,
-    returning: u.returning || false
-  }));
+  const unitsList = Array.from(gameState.units.values())
+    .filter(u => u.health > 0)
+    .map(u => ({
+      id: u.id,
+      playerId: u.playerId,
+      type: u.type,
+      x: Math.round(u.x),
+      y: Math.round(u.y),
+      health: Math.round(u.health),
+      maxHealth: u.maxHealth,
+      team: u.team,
+      range: u.range,
+      damage: u.damage
+    }));
 
-  const basesList = Array.from(gameState.bases.values()).map(b => ({
-    id: b.id,
-    playerId: b.playerId,
-    x: b.x,
-    y: b.y,
-    health: Math.round(b.health),
-    maxHealth: b.maxHealth,
-    team: b.team
-  }));
-
-  const projList = projectiles.filter(p => p.alive).map(p => ({
-    id: p.id,
-    x: Math.round(p.x),
-    y: Math.round(p.y),
-    team: p.shooterTeam
-  }));
+  const basesList = Array.from(gameState.bases.values())
+    .map(b => ({
+      id: b.id,
+      playerId: b.playerId,
+      x: b.x,
+      y: b.y,
+      health: Math.round(b.health),
+      maxHealth: b.maxHealth,
+      team: b.team
+    }));
 
   gameState.isGameFinished();
+
+  const leaderboard = playersList
+    .filter(p => p.isAlive)
+    .sort((a, b) => b.kills - a.kills);
 
   return {
     type: 'GAME_STATE',
@@ -648,107 +616,154 @@ function buildGameState() {
     units: unitsList,
     bases: basesList,
     resourceNodes: RESOURCE_NODES,
-    projectiles: projList,
-    obstacles: MAP_OBSTACLES,
-    leaderboard: [...playersList].sort((a, b) => b.kills - a.kills),
+    leaderboard,
     gameStatus: gameState.gameStatus,
     winner: gameState.winner,
     activeSessions: wss.clients.size,
-    messages: gameState.messages.slice(-10),
-    mapWidth: GAME_CONFIG.MAP_WIDTH,
-    mapHeight: GAME_CONFIG.MAP_HEIGHT
+    messages: gameState.messages.slice(-10)
   };
 }
 
 function broadcastGameState() {
-  const st = buildGameState();
-  wss.clients.forEach(c => {
-    if (c.readyState === WebSocket.OPEN) {
+  const state = buildGameState();
+
+  console.log(`[BROADCAST] Sending state to ${wss.clients.size} clients - Players: ${state.players.length}, Units: ${state.units.length}`);
+
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
       try {
-        c.send(JSON.stringify(st));
-      } catch(e) {}
+        client.send(JSON.stringify(state));
+      } catch (e) {
+        console.error(`[BROADCAST_ERROR] ${e.message}`);
+      }
     }
   });
 }
 
+let gameLoopStarted = false;
+
 function startGameLoop() {
+  if (gameLoopStarted) return;
+  gameLoopStarted = true;
+
   console.log('[GAMELOOP] Started');
+
   setInterval(() => {
-    if (gameState.gameStatus !== 'playing' || !gameState.gameStarted) return;
+    if (gameState.gameStatus !== 'playing' || !gameState.gameStarted) {
+      return;
+    }
+
     gameState.gameTime++;
+
     const unitsArray = Array.from(gameState.units.values());
 
     unitsArray.forEach(unit => {
-      if (unit.type === 'collector') {
-        unit.updateCollector(gameState.players.get(unit.playerId));
-      } else {
-        unit.updateAI(unitsArray);
-      }
+      unit.updateAI(unitsArray);
       unit.update();
-    });
 
-    projectiles.forEach(proj => {
-      if (!proj.alive) return;
-      proj.update();
-      if (!proj.alive) return;
+      if (unit.type === 'collector') {
+        for (const node of RESOURCE_NODES) {
+          const dist = Math.hypot(unit.x - node.x, unit.y - node.y);
+          if (dist < 30 && node.amount > 0) {
+            unit.carrying = Math.min(GAME_CONFIG.COLLECTOR_CARRY_MAX, unit.carrying + GAME_CONFIG.COLLECTOR_COLLECT_RATE);
+            node.amount = Math.max(0, node.amount - GAME_CONFIG.COLLECTOR_COLLECT_RATE);
+            break;
+          }
+        }
 
-      for (const unit of unitsArray) {
-        if (unit.team === proj.shooterTeam || unit.health <= 0) continue;
-        if (Math.hypot(unit.x - proj.x, unit.y - proj.y) < 10) {
-          unit.health = Math.max(0, unit.health - proj.damage);
-          proj.alive = false;
-          if (unit.health <= 0) {
-            gameState.units.delete(unit.id);
-            const shooter = unitsArray.find(u => u.id === proj.shooterId);
-            if (shooter) {
-              const killer = gameState.players.get(shooter.playerId);
-              if (killer?.isAlive) killer.kills++;
+        if (unit.carrying >= GAME_CONFIG.COLLECTOR_CARRY_MAX) {
+          const player = gameState.players.get(unit.playerId);
+          if (player) {
+            const distToBase = Math.hypot(unit.x - player.baseX, unit.y - player.baseY);
+            if (distToBase < 50) {
+              player.gold += unit.carrying;
+              unit.carrying = 0;
+            } else {
+              unit.targetX = player.baseX;
+              unit.targetY = player.baseY;
             }
           }
-          break;
-        }
-      }
-
-      if (!proj.alive) return;
-      for (const [, base] of gameState.bases) {
-        if (base.team === proj.shooterTeam) continue;
-        if (Math.hypot(base.x - proj.x, base.y - proj.y) < 28) {
-          base.health = Math.max(0, base.health - proj.damage * 0.25);
-          proj.alive = false;
-          break;
         }
       }
     });
-    projectiles = projectiles.filter(p => p.alive);
 
-    for (const [, base] of gameState.bases) {
+    // Combat
+    for (let i = 0; i < unitsArray.length; i++) {
+      for (let j = i + 1; j < unitsArray.length; j++) {
+        const u1 = unitsArray[i];
+        const u2 = unitsArray[j];
+
+        if (u1.team !== u2.team && u1.health > 0 && u2.health > 0 && u1.range > 0) {
+          const dist = Math.hypot(u1.x - u2.x, u1.y - u2.y);
+
+          if (dist < 30) {
+            const now = Date.now();
+
+            if (now - u1.lastAttack > u1.attackCooldown) {
+              const damage = (Math.random() * u1.damage) / 2;
+              u2.health = Math.max(0, u2.health - damage);
+              u1.lastAttack = now;
+            }
+
+            if (now - u2.lastAttack > u2.attackCooldown) {
+              const damage = (Math.random() * u2.damage) / 2;
+              u1.health = Math.max(0, u1.health - damage);
+              u2.lastAttack = now;
+            }
+
+            if (u1.health <= 0) {
+              gameState.units.delete(u1.id);
+              const killer = gameState.players.get(u2.playerId);
+              if (killer && killer.isAlive) killer.kills++;
+            }
+
+            if (u2.health <= 0) {
+              gameState.units.delete(u2.id);
+              const killer = gameState.players.get(u1.playerId);
+              if (killer && killer.isAlive) killer.kills++;
+            }
+          }
+        }
+      }
+    }
+
+    // Base damage
+    for (const [baseId, base] of gameState.bases) {
       for (const unit of unitsArray) {
-        if (unit.health > 0 && unit.team !== base.team &&
-            Math.hypot(unit.x - base.x, unit.y - base.y) < 38) {
-          base.health -= unit.damage * 0.015;
+        if (unit.health > 0 && unit.team !== base.team) {
+          const dist = Math.hypot(unit.x - base.x, unit.y - base.y);
+          if (dist < 50) {
+            base.health -= unit.damage * 0.05;
+          }
         }
       }
     }
 
-    for (const [, base] of gameState.bases) {
+    // Check if base destroyed
+    for (const [baseId, base] of gameState.bases) {
       if (base.health <= 0) {
-        const p = gameState.players.get(base.playerId);
-        if (p) p.isAlive = false;
+        const player = gameState.players.get(base.playerId);
+        if (player) {
+          player.isAlive = false;
+        }
       }
     }
 
-    RESOURCE_NODES.forEach(n => {
-      if (n.amount < n.maxAmount) n.amount = Math.min(n.maxAmount, n.amount + GAME_CONFIG.NODE_REGEN_RATE);
-    });
-
-    for (const [, p] of gameState.players) {
-      if (p.isAlive) {
-        p.gold += 0.5;
-        p.energy = Math.min(p.energy + 0.3, 500);
+    // Resources generation
+    for (const [playerId, player] of gameState.players) {
+      if (player.isAlive) {
+        player.gold = Math.min(player.gold + 1, 1000);
+        player.energy = Math.min(player.energy + 0.5, 500);
       }
+    }
+
+    // Node regeneration
+    for (const node of RESOURCE_NODES) {
+      node.amount = Math.min(node.maxAmount, node.amount + GAME_CONFIG.NODE_REGEN_RATE);
     }
 
     broadcastGameState();
+
   }, GAME_CONFIG.UPDATE_RATE);
 }
 
@@ -756,11 +771,13 @@ startGameLoop();
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\n🎮 WAR ZONE V3.1 READY\n💻 Server: http://localhost:${PORT}\n`);
+  console.log(`\n${'='.repeat(70)}`);
+  console.log(`🎮 WAR ZONE SERVER V3.1 RUNNING ON PORT ${PORT}`);
+  console.log(`${'='.repeat(70)}\n`);
 });
 
 process.on('SIGINT', () => {
-  console.log('\n[SHUTDOWN] Server stopping...');
-  wss.clients.forEach(c => c.close());
+  console.log('\n🛑 Server shutting down...');
+  wss.clients.forEach(client => client.close());
   process.exit(0);
 });
