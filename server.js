@@ -30,61 +30,70 @@ app.use((req, res, next) => {
 });
 
 const GAME_CONFIG = {
-  MAP_WIDTH: 800, MAP_HEIGHT: 700,
+  MAP_WIDTH: 1000, MAP_HEIGHT: 800,
   MIN_PLAYERS_TO_START: 2,
   UPDATE_RATE: 30,
   GAME_DURATION_MS: 600000,
-  SPAWN_MIN_DIST: 60, SPAWN_MAX_DIST: 100,
+  SPAWN_MIN_DIST: 100, SPAWN_MAX_DIST: 150,
   COLLECTOR_COLLECT_RATE: 15,
   COLLECTOR_CARRY_MAX: 150,
   NODE_REGEN_RATE: 0.4
 };
 
-// range = shooting distance; units stop at this range and fire projectiles
+// Balanced unit types
 const UNIT_TYPES = {
-  soldier:    { health: 30,  maxHealth: 30,  damage: 10, speed: 2,   range: 80,  attackCooldown: 600,  cost: { gold: 30,  energy: 20  } },
-  tank:       { health: 100, maxHealth: 100, damage: 25, speed: 1,   range: 50,  attackCooldown: 900,  cost: { gold: 100, energy: 50  } },
-  fighter:    { health: 50,  maxHealth: 50,  damage: 35, speed: 3,   range: 100, attackCooldown: 400,  cost: { gold: 150, energy: 80  } },
-  cannon:     { health: 40,  maxHealth: 40,  damage: 50, speed: 0.5, range: 160, attackCooldown: 1200, cost: { gold: 200, energy: 100 } },
-  helicopter: { health: 60,  maxHealth: 60,  damage: 40, speed: 4,   range: 120, attackCooldown: 500,  cost: { gold: 250, energy: 120 } },
-  bomber:     { health: 80,  maxHealth: 80,  damage: 70, speed: 2.5, range: 180, attackCooldown: 1500, cost: { gold: 300, energy: 150 } },
-  collector:  { health: 25,  maxHealth: 25,  damage: 0,  speed: 2,   range: 0,   attackCooldown: 9999, cost: { gold: 20,  energy: 10  } }
+  soldier:    { health: 30,  maxHealth: 30,  damage: 10, speed: 2,   range: 80,  attackCooldown: 600,  cost: { gold: 30,  energy: 20  }, canBuild: false, buildingTime: 0 },
+  tank:       { health: 120, maxHealth: 120, damage: 22, speed: 0.8, range: 50,  attackCooldown: 900,  cost: { gold: 100, energy: 50  }, canBuild: false, buildingTime: 0 },
+  fighter:    { health: 50,  maxHealth: 50,  damage: 35, speed: 3.2, range: 100, attackCooldown: 400,  cost: { gold: 150, energy: 80  }, canBuild: false, buildingTime: 0 },
+  cannon:     { health: 40,  maxHealth: 40,  damage: 50, speed: 0.4, range: 160, attackCooldown: 1200, cost: { gold: 200, energy: 100 }, canBuild: false, buildingTime: 0 },
+  helicopter: { health: 60,  maxHealth: 60,  damage: 40, speed: 3.8, range: 120, attackCooldown: 500,  cost: { gold: 250, energy: 120 }, canBuild: false, buildingTime: 0 },
+  bomber:     { health: 70,  maxHealth: 70,  damage: 65, speed: 2.2, range: 180, attackCooldown: 1500, cost: { gold: 300, energy: 150 }, canBuild: false, buildingTime: 0 },
+  collector:  { health: 25,  maxHealth: 25,  damage: 0,  speed: 2,   range: 0,   attackCooldown: 9999, cost: { gold: 20,  energy: 10  }, canBuild: false, buildingTime: 0 },
+  constructor:{ health: 35,  maxHealth: 35,  damage: 5,  speed: 1.5, range: 40,  attackCooldown: 800,  cost: { gold: 80,  energy: 60  }, canBuild: true, buildingTime: 0 },
+  turret:     { health: 80,  maxHealth: 80,  damage: 45, speed: 0,   range: 150, attackCooldown: 400,  cost: { gold: 150, energy: 100 }, canBuild: false, buildingTime: 0 },
+  barracks:   { health: 100, maxHealth: 100, damage: 0,  speed: 0,   range: 0,   attackCooldown: 9999, cost: { gold: 200, energy: 150 }, canBuild: false, buildingTime: 0 }
 };
 
 function spawnPosition(baseX, baseY) {
   const angle = Math.random() * Math.PI * 2;
   const dist  = GAME_CONFIG.SPAWN_MIN_DIST + Math.random() * (GAME_CONFIG.SPAWN_MAX_DIST - GAME_CONFIG.SPAWN_MIN_DIST);
   return {
-    x: Math.max(10, Math.min(GAME_CONFIG.MAP_WIDTH  - 10, baseX + Math.cos(angle) * dist)),
-    y: Math.max(10, Math.min(GAME_CONFIG.MAP_HEIGHT - 10, baseY + Math.sin(angle) * dist))
+    x: Math.max(30, Math.min(GAME_CONFIG.MAP_WIDTH  - 30, baseX + Math.cos(angle) * dist)),
+    y: Math.max(30, Math.min(GAME_CONFIG.MAP_HEIGHT - 30, baseY + Math.sin(angle) * dist))
   };
 }
 
-// Resource nodes – 15 nodes spread across the map
-const RESOURCE_NODES = [
-  // Center cluster
-  { id:'node_0',  x:400, y:350, amount:500, maxAmount:500 },
-  { id:'node_1',  x:350, y:310, amount:400, maxAmount:400 },
-  { id:'node_2',  x:450, y:390, amount:400, maxAmount:400 },
-  // Mid-left / mid-right
-  { id:'node_3',  x:180, y:350, amount:450, maxAmount:450 },
-  { id:'node_4',  x:620, y:350, amount:450, maxAmount:450 },
-  // Top row
-  { id:'node_5',  x:260, y:170, amount:350, maxAmount:350 },
-  { id:'node_6',  x:400, y:130, amount:350, maxAmount:350 },
-  { id:'node_7',  x:540, y:170, amount:350, maxAmount:350 },
-  // Bottom row
-  { id:'node_8',  x:260, y:530, amount:350, maxAmount:350 },
-  { id:'node_9',  x:400, y:570, amount:350, maxAmount:350 },
-  { id:'node_10', x:540, y:530, amount:350, maxAmount:350 },
-  // Near-base contested
-  { id:'node_11', x:190, y:220, amount:300, maxAmount:300 },
-  { id:'node_12', x:610, y:480, amount:300, maxAmount:300 },
-  { id:'node_13', x:190, y:480, amount:300, maxAmount:300 },
-  { id:'node_14', x:610, y:220, amount:300, maxAmount:300 },
+// Obstacles on map
+const MAP_OBSTACLES = [
+  { x: 500, y: 200, radius: 80, type: 'rock' },
+  { x: 300, y: 400, radius: 60, type: 'rock' },
+  { x: 700, y: 400, radius: 60, type: 'rock' },
+  { x: 500, y: 600, radius: 80, type: 'rock' },
+  { x: 150, y: 150, radius: 50, type: 'forest' },
+  { x: 850, y: 150, radius: 50, type: 'forest' },
+  { x: 150, y: 650, radius: 50, type: 'forest' },
+  { x: 850, y: 650, radius: 50, type: 'forest' },
 ];
 
-// ── Projectiles ───────────────────────────────────────────────────────────────
+// Resource nodes
+const RESOURCE_NODES = [
+  { id:'node_0',  x:500, y:400, amount:500, maxAmount:500 },
+  { id:'node_1',  x:350, y:350, amount:400, maxAmount:400 },
+  { id:'node_2',  x:650, y:450, amount:400, maxAmount:400 },
+  { id:'node_3',  x:200, y:400, amount:450, maxAmount:450 },
+  { id:'node_4',  x:800, y:400, amount:450, maxAmount:450 },
+  { id:'node_5',  x:350, y:200, amount:350, maxAmount:350 },
+  { id:'node_6',  x:500, y:150, amount:350, maxAmount:350 },
+  { id:'node_7',  x:650, y:200, amount:350, maxAmount:350 },
+  { id:'node_8',  x:350, y:600, amount:350, maxAmount:350 },
+  { id:'node_9',  x:500, y:650, amount:350, maxAmount:350 },
+  { id:'node_10', x:650, y:600, amount:350, maxAmount:350 },
+  { id:'node_11', x:200, y:250, amount:300, maxAmount:300 },
+  { id:'node_12', x:800, y:550, amount:300, maxAmount:300 },
+  { id:'node_13', x:200, y:550, amount:300, maxAmount:300 },
+  { id:'node_14', x:800, y:250, amount:300, maxAmount:300 },
+];
+
 let projectiles = [];
 let projIdCounter = 0;
 
@@ -115,14 +124,13 @@ class Projectile {
   }
 }
 
-// ── Game State ────────────────────────────────────────────────────────────────
 class GameState {
   constructor() { this.reset(); }
   reset() {
     this.players = new Map(); this.units = new Map(); this.bases = new Map();
     this.gameTime = 0; this.gameStartTime = null;
     this.gameStatus = 'waiting'; this.gameStarted = false;
-    this.winner = null; this.version = '3.0'; this.messages = [];
+    this.winner = null; this.version = '3.1'; this.messages = [];
     projectiles = []; projIdCounter = 0;
     console.log('[RESET] Fresh game state');
   }
@@ -162,14 +170,13 @@ let unitIdCounter = 0;
 let playerIdCounter = 0;
 const TEAMS = ['blue', 'red', 'green', 'yellow', 'purple', 'orange'];
 const BASE_POSITIONS = [
-  { x:100, y:100 }, { x:700, y:600 },
-  { x:100, y:600 }, { x:700, y:100 },
-  { x:400, y:100 }, { x:400, y:600 }
+  { x:100, y:100 }, { x:900, y:700 },
+  { x:100, y:700 }, { x:900, y:100 },
+  { x:500, y:100 }, { x:500, y:700 }
 ];
 
-console.log(`\n${'='.repeat(60)}\n🎮 WAR ZONE SERVER V3.0\n${'='.repeat(60)}\n`);
+console.log(`\n${'='.repeat(60)}\n🎮 WAR ZONE SERVER V3.1\n${'='.repeat(60)}\n`);
 
-// ── Player ────────────────────────────────────────────────────────────────────
 class Player {
   constructor(id, name, team, ws) {
     this.id = id; this.name = name; this.team = team; this.ws = ws;
@@ -185,7 +192,6 @@ class Player {
   }
 }
 
-// ── Unit ──────────────────────────────────────────────────────────────────────
 class Unit {
   constructor(id, playerId, type, x, y, team) {
     this.id = id; this.playerId = playerId; this.type = type;
@@ -195,7 +201,6 @@ class Unit {
     Object.assign(this, UNIT_TYPES[type]);
     this.lastAttack = 0;
     this.isShooting = false;
-    // Collector
     this.carrying = 0; this.returning = false; this.targetNodeId = null;
   }
 
@@ -211,12 +216,42 @@ class Unit {
     return nearest;
   }
 
+  isObstacleBlocking(tx, ty) {
+    for (const obs of MAP_OBSTACLES) {
+      const d = Math.hypot(tx - obs.x, ty - obs.y);
+      if (d < obs.radius + 20) return true;
+    }
+    return false;
+  }
+
   updateAI(allUnits) {
     const enemy = this.findEnemy(allUnits);
+    if (this.type === 'barracks') return; // Stationary
+    if (this.type === 'turret') {
+      if (enemy) {
+        const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
+        if (dist <= this.range) {
+          this.isShooting = true;
+          const now = Date.now();
+          if (now - this.lastAttack >= this.attackCooldown) {
+            this.lastAttack = now;
+            projectiles.push(new Projectile(
+              this.id, this.playerId, this.team,
+              this.x, this.y, enemy.x, enemy.y, this.damage
+            ));
+          }
+        } else {
+          this.isShooting = false;
+        }
+      } else {
+        this.isShooting = false;
+      }
+      return;
+    }
+
     if (enemy) {
       const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
       if (dist <= this.range) {
-        // In range: stop and shoot
         this.vx = 0; this.vy = 0; this.isShooting = true;
         const now = Date.now();
         if (now - this.lastAttack >= this.attackCooldown) {
@@ -227,7 +262,6 @@ class Unit {
           ));
         }
       } else {
-        // Chase
         this.isShooting = false;
         const dx = enemy.x - this.x, dy = enemy.y - this.y;
         const d = Math.hypot(dx, dy);
@@ -239,8 +273,10 @@ class Unit {
       const dx = this.targetX - this.x, dy = this.targetY - this.y;
       const d = Math.hypot(dx, dy);
       if (d > 2) {
-        this.vx = (dx / d) * this.speed;
-        this.vy = (dy / d) * this.speed;
+        if (!this.isObstacleBlocking(this.targetX, this.targetY)) {
+          this.vx = (dx / d) * this.speed;
+          this.vy = (dy / d) * this.speed;
+        }
       } else {
         this.vx = 0; this.vy = 0;
         this.targetX = null; this.targetY = null;
@@ -252,12 +288,10 @@ class Unit {
 
   updateCollector(player) {
     if (!player) return;
-
     if (this.returning) {
-      // Head back to base to deposit
       const db = Math.hypot(this.x - player.baseX, this.y - player.baseY);
       if (db < 40) {
-        player.gold   += this.carrying;                              // no cap
+        player.gold   += this.carrying;
         player.energy  = Math.min(player.energy + this.carrying * 0.2, 500);
         this.carrying  = 0; this.returning = false; this.targetNodeId = null;
         this.targetX = null; this.targetY = null;
@@ -265,7 +299,6 @@ class Unit {
         this.targetX = player.baseX; this.targetY = player.baseY;
       }
     } else {
-      // Find nearest non-empty node autonomously
       let bestNode = null, bestDist = Infinity;
       for (const node of RESOURCE_NODES) {
         if (node.amount > 0) {
@@ -283,16 +316,8 @@ class Unit {
           bestNode.amount = Math.max(0, bestNode.amount - take);
           if (this.carrying >= GAME_CONFIG.COLLECTOR_CARRY_MAX) this.returning = true;
         }
-      } else {
-        // No resources → idle near base
-        if (this.targetX === null) {
-          this.targetX = player.baseX + (Math.random() - 0.5) * 80;
-          this.targetY = player.baseY + (Math.random() - 0.5) * 80;
-        }
       }
     }
-
-    // Move toward target
     if (this.targetX !== null) {
       const dx = this.targetX - this.x, dy = this.targetY - this.y;
       const d = Math.hypot(dx, dy);
@@ -303,10 +328,17 @@ class Unit {
 
   update() {
     this.x += this.vx; this.y += this.vy;
-    if (this.x <= 0 || this.x >= GAME_CONFIG.MAP_WIDTH)  this.vx *= -1;
-    if (this.y <= 0 || this.y >= GAME_CONFIG.MAP_HEIGHT)  this.vy *= -1;
-    this.x = Math.max(0, Math.min(GAME_CONFIG.MAP_WIDTH,  this.x));
-    this.y = Math.max(0, Math.min(GAME_CONFIG.MAP_HEIGHT, this.y));
+    this.x = Math.max(10, Math.min(GAME_CONFIG.MAP_WIDTH  - 10, this.x));
+    this.y = Math.max(10, Math.min(GAME_CONFIG.MAP_HEIGHT - 10, this.y));
+    for (const obs of MAP_OBSTACLES) {
+      const d = Math.hypot(this.x - obs.x, this.y - obs.y);
+      if (d < obs.radius + 15) {
+        const angle = Math.atan2(this.y - obs.y, this.x - obs.x);
+        this.x = obs.x + Math.cos(angle) * (obs.radius + 15);
+        this.y = obs.y + Math.sin(angle) * (obs.radius + 15);
+        this.vx *= -0.5; this.vy *= -0.5;
+      }
+    }
   }
 }
 
@@ -317,7 +349,6 @@ class Base {
   }
 }
 
-// ── WebSocket ─────────────────────────────────────────────────────────────────
 wss.on('connection', (ws) => {
   let playerId = null;
   ws.on('message', (msg) => {
@@ -329,13 +360,13 @@ wss.on('connection', (ws) => {
         case 'MOVE_UNIT':    if (playerId) handleMoveUnit(playerId, data); break;
         case 'GET_STATE':    if (playerId) sendGameState(ws, playerId); break;
         case 'CHAT_MESSAGE': if (playerId) handleChatMessage(playerId, data); break;
+        case 'GET_PLAYERS':  sendOnlinePlayers(ws); break;
         case 'PING': ws.send(JSON.stringify({ type: 'PONG' })); break;
       }
     } catch(e) { console.error('[MSG]', e.message); }
   });
   ws.on('close', () => {
     if (playerId) handleDisconnect(playerId);
-    gameState.activeSessions = wss.clients.size;
   });
 });
 
@@ -358,10 +389,17 @@ function handleJoinGame(ws, data) {
   ws.send(JSON.stringify({
     type: 'JOIN_CONFIRMED', playerId, team,
     baseX: player.baseX, baseY: player.baseY,
-    version: '3.0', gameStatus: gameState.gameStatus
+    version: '3.1', gameStatus: gameState.gameStatus
   }));
   broadcastGameState();
   return playerId;
+}
+
+function sendOnlinePlayers(ws) {
+  const players = Array.from(gameState.players.values()).filter(p => p.isAlive).map(p => ({
+    id: p.id, name: p.name, team: p.team, kills: p.kills
+  }));
+  ws.send(JSON.stringify({ type: 'PLAYERS_LIST', players }));
 }
 
 const MAX_COLLECTORS_PER_PLAYER = 5;
@@ -372,14 +410,11 @@ function handleSpawnUnit(playerId, data) {
   const stats = UNIT_TYPES[data.unitType];
   if (!stats || player.gold < stats.cost.gold || player.energy < stats.cost.energy) return;
 
-  // Limit collectors per player
   if (data.unitType === 'collector') {
     const collectorCount = Array.from(gameState.units.values())
       .filter(u => u.playerId === playerId && u.type === 'collector').length;
     if (collectorCount >= MAX_COLLECTORS_PER_PLAYER) {
-      broadcastMessage(playerId,
-        `❌ Limita de ${MAX_COLLECTORS_PER_PLAYER} collectors atinsa!`,
-        'SYSTEM', player.team);
+      broadcastMessage(playerId, `❌ Max ${MAX_COLLECTORS_PER_PLAYER} collectors!`, 'SYSTEM', player.team);
       return;
     }
   }
@@ -414,11 +449,9 @@ function handleCommand(playerId, cmd) {
   let r = '';
   if (command === '/stats') r = `HP=${player.health} K=${player.kills} G=${Math.round(player.gold)} E=${Math.round(player.energy)}`;
   else if (command === '/units') r = `Units: ${Array.from(gameState.units.values()).filter(u=>u.playerId===playerId).length}`;
-  else if (command === '/time')  r = `Time: ${gameState.gameStartTime ? Math.floor((Date.now()-gameState.gameStartTime)/1000) : 0}s`;
-  else if (command === '/help')  r = '/stats /units /time /heal /boost /list';
+  else if (command === '/help')  r = '/stats /units /heal /boost';
   else if (command === '/heal')  { player.health = Math.min(100, player.health+20); r = '+20 HP'; }
   else if (command === '/boost') { player.gold += 100; r = '+100 Gold'; }
-  else if (command === '/list')  r = Array.from(gameState.players.values()).filter(p=>p.isAlive).map(p=>`${p.name}(${p.team})[${p.kills}K]`).join(', ');
   else r = 'Unknown. /help';
   broadcastMessage(playerId, r, 'SYSTEM', player.team);
 }
@@ -471,12 +504,13 @@ function buildGameState() {
   }));
   gameState.isGameFinished();
   return {
-    type:'GAME_STATE', version:'3.0', gameTime:gameState.gameTime,
+    type:'GAME_STATE', version:'3.1', gameTime:gameState.gameTime,
     players:playersList, units:unitsList, bases:basesList,
-    resourceNodes:RESOURCE_NODES, projectiles:projList,
+    resourceNodes:RESOURCE_NODES, projectiles:projList, obstacles:MAP_OBSTACLES,
     leaderboard:[...playersList].sort((a,b)=>b.kills-a.kills),
     gameStatus:gameState.gameStatus, winner:gameState.winner,
-    activeSessions:wss.clients.size, messages:gameState.messages.slice(-10)
+    activeSessions:wss.clients.size, messages:gameState.messages.slice(-10),
+    mapWidth: GAME_CONFIG.MAP_WIDTH, mapHeight: GAME_CONFIG.MAP_HEIGHT
   };
 }
 
@@ -487,7 +521,6 @@ function broadcastGameState() {
   });
 }
 
-// ── Game Loop ─────────────────────────────────────────────────────────────────
 function startGameLoop() {
   console.log('[GAMELOOP] Started');
   setInterval(() => {
@@ -495,7 +528,6 @@ function startGameLoop() {
     gameState.gameTime++;
     const unitsArray = Array.from(gameState.units.values());
 
-    // Unit AI
     unitsArray.forEach(unit => {
       if (unit.type === 'collector') {
         unit.updateCollector(gameState.players.get(unit.playerId));
@@ -505,13 +537,11 @@ function startGameLoop() {
       unit.update();
     });
 
-    // Projectile tick + hit detection
     projectiles.forEach(proj => {
       if (!proj.alive) return;
       proj.update();
       if (!proj.alive) return;
 
-      // Hit units
       for (const unit of unitsArray) {
         if (unit.team === proj.shooterTeam || unit.health <= 0) continue;
         if (Math.hypot(unit.x - proj.x, unit.y - proj.y) < 10) {
@@ -519,7 +549,6 @@ function startGameLoop() {
           proj.alive = false;
           if (unit.health <= 0) {
             gameState.units.delete(unit.id);
-            // Credit kill to shooter
             const shooter = unitsArray.find(u => u.id === proj.shooterId);
             if (shooter) {
               const killer = gameState.players.get(shooter.playerId);
@@ -530,7 +559,6 @@ function startGameLoop() {
         }
       }
 
-      // Hit bases
       if (!proj.alive) return;
       for (const [, base] of gameState.bases) {
         if (base.team === proj.shooterTeam) continue;
@@ -542,7 +570,6 @@ function startGameLoop() {
     });
     projectiles = projectiles.filter(p => p.alive);
 
-    // Light contact pressure on bases from nearby units
     for (const [, base] of gameState.bases) {
       for (const unit of unitsArray) {
         if (unit.health > 0 && unit.team !== base.team &&
@@ -552,7 +579,6 @@ function startGameLoop() {
       }
     }
 
-    // Base destroyed → player eliminated
     for (const [, base] of gameState.bases) {
       if (base.health <= 0) {
         const p = gameState.players.get(base.playerId);
@@ -560,16 +586,14 @@ function startGameLoop() {
       }
     }
 
-    // Node slow regen
     RESOURCE_NODES.forEach(n => {
       if (n.amount < n.maxAmount) n.amount = Math.min(n.maxAmount, n.amount + GAME_CONFIG.NODE_REGEN_RATE);
     });
 
-    // Passive income – no gold cap
     for (const [, p] of gameState.players) {
       if (p.isAlive) {
-        p.gold   += 0.5;                                      // unlimited gold
-        p.energy = Math.min(p.energy + 0.3, 500);            // energy still capped at 500
+        p.gold   += 0.5;
+        p.energy = Math.min(p.energy + 0.3, 500);
       }
     }
 
@@ -580,5 +604,5 @@ function startGameLoop() {
 startGameLoop();
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`\n🎮 WAR ZONE V3.0 → port ${PORT}\n`));
+server.listen(PORT, () => console.log(`\n🎮 WAR ZONE V3.1 → port ${PORT}\n`));
 process.on('SIGINT', () => { wss.clients.forEach(c => c.close()); process.exit(0); });
